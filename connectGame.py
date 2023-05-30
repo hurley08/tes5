@@ -28,6 +28,8 @@ class gameObject():
         self.serialConnected = False
         self.inProgress = False
         self.winner = False
+        self.playerScore = {}
+        self.drawBoard = True
 
     def init_serial(self):
         self.ardu = serial.Serial()
@@ -61,7 +63,7 @@ class gameObject():
         self.lastMove = None
         self.currentMove = None
         print("done. commencing game")
-        self.playerScore = {{1: 0}, {2: 0}}
+        self.playerScore = {1: 0, 2: 0}
         return self
 
     def switch_player(self):
@@ -78,7 +80,7 @@ class gameObject():
         dbl_space = '\n\n' if dbl_space else None
         print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
 
-    def modPlayerPts(player=-1, delta=0):
+    def modPlayerPts(self, player=-1, delta=0):
         if player == -1:
             player = self.currentPlayer
         try:
@@ -161,11 +163,14 @@ class gameObject():
             print(
                 f'{isWinner[0]=}, player: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
-            draw_board(jsd)
+            if self.drawBoard:
+                draw_board(jsd)
             self.game_over(1, player)
             return True
 
         try:
+            if self.drawBoard:
+                self.draw_board(self.board)
 
             # draw_board(self.board)
             self.modPlayerPts(player, 1)
@@ -194,10 +199,10 @@ class gameObject():
                     break
 
             # while k - 8 >= 0 and board[k]['color'] in (1,2):
-            #	print(k,board[k]['color'],k-8,board[k-8]['color'])
-            #	if board[k-8]['color'] == -1:
-            #		open_spaces.append(k)
-            #	k=k-8
+            #   print(k,board[k]['color'],k-8,board[k-8]['color'])
+            #   if board[k-8]['color'] == -1:
+            #       open_spaces.append(k)
+            #   k=k-8
 
                 #print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
         if len(open_spaces) > 1:
@@ -216,8 +221,8 @@ class gameObject():
 
     def check_move(self, player, desiredMove):
 
-        #		if not self.lastMove:
-        #			print("this is the first turn")
+        #       if not self.lastMove:
+        #           print("this is the first turn")
         if self.lastMove != None:
             if self.board[desiredMove]['occupied'] == True:
                 print("the desired space is occuppied")
@@ -297,7 +302,7 @@ class gameObject():
                 if len(sequence) == 2:
                     print('connect2!')
                 if len(sequence) == 3:
-                    print('connect 3!')
+                    print('connect3!')
                 if len(sequence) == 4:
                     if self.locate_col(sequence):
                         return True, player, sequence, last_move
@@ -306,6 +311,10 @@ class gameObject():
             if 0 <= i + last_move < (self.length * self.height):
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
+                if len(sequence) == 2:
+                    print('connect2!')
+                if len(sequence) == 3:
+                    print('connect3!')
                 if len(sequence) == 4:
                     sequence.reverse()
                     fa = self.locate_col(sequence)
@@ -319,6 +328,10 @@ class gameObject():
             if 0 <= i + last_move < (self.height * self.length):
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
+                if len(sequence) == 2:
+                    print('connect2!')
+                if len(sequence) == 3:
+                    print('connect3!')
                 if len(sequence) == 4:
                     return True, player, sequence, last_move
 
@@ -331,6 +344,10 @@ class gameObject():
                 print(f"{last_move=},{last_move+i=},{board[last_move+i]=}")
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
+                    if len(sequence) == 2:
+                        print('connect2!')
+                    if len(sequence) == 3:
+                        print('connect3!')
                     if len(sequence) == 4:
                         fa = self.check_spillover(
                             sequence, direction='horizontal')
@@ -352,14 +369,13 @@ class gameObject():
         if reason in reasons.keys():
             if reason == 1:
                 self.winner = data
-        print(
-            f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+        print(f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         self.inProgress = False
         self.printLineBreak()
         return self.inProgress
 
         # if self.serialConnected:
-    #		self.ardu.close()
+    #       self.ardu.close()
     #+ i for i in range(8)]def #pcvpc(self):
 
 
@@ -424,13 +440,17 @@ if __name__ == '__main__':
         for i in tally:
             aggre[i[0]]['winningMoves'].append([i[1], i[2]])
             aggre[i[0]]['count'] += 1
-        print(aggre)
+        print('\nwinner\t winning sequence\twinning move')
+        for i in tally:
+            print('')
+            for j in i:
+                print(j, end='\t')
         return aggre
 
     num_times = confirm_runtime()
     tally = []
     # if game.serialConnected:
-    #	game.init_serial()
+    #   game.init_serial()
     for tt in range(num_times):
         game = gameObject(length=8, height=8)
         game.start_game()
@@ -457,7 +477,6 @@ if __name__ == '__main__':
                         game.start_turn(game.currentPlayer,
                                         random.choice(selectFrom))
                         #print(f"\nlast move: {game.lastMove} current move: {game.currentMove}")
-                        game.draw_board(game.board)
                         game.switch_player()
 
                     else:
@@ -469,4 +488,4 @@ if __name__ == '__main__':
         tally.append([game.isWinner[1], game.isWinner[2], game.isWinner[3]])
 
         # game.whose_turn()
-    process_tally(tally)
+    results = process_tally(tally)
