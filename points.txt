@@ -1,0 +1,12 @@
+rewards and penalties
+
+
+rewards:
+placing a piece: 1
+connecting 2: 3
+connecting 3: 5
+connecting 4: 10
+
+allowing opponent to connect 2: -1
+allowing opponent to connect 3: -3
+allowing an opponent to connect 4: -12

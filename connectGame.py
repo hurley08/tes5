@@ -30,6 +30,7 @@ class gameObject():
         self.winner = False
         self.playerScore = {}
         self.drawBoard = True
+        self.iterations = self.confirm_runtime()
 
     def init_serial(self):
         self.ardu = serial.Serial()
@@ -100,6 +101,31 @@ class gameObject():
                 {i: {'color': -1, 'occupied': False, 'moveNumber': -1}})
         return boardIndex
 
+    def confirm_runtime(self):
+        num_times = False
+        confirm = False
+
+        while not confirm:
+            while not num_times:
+                num_times = input(
+                    'press enter number of iterations to continue: ')
+                try:
+                    num_times = int(num_times)
+                except:
+                    num_times = False
+            check = input(
+                f'You entered {num_times:}. Confirm by re-entering this value:')
+            try:
+                check = int(check)
+            except:
+                num_times = False
+            if check != num_times:
+                num_times = False
+            if check == num_times:
+                confirm = True
+
+                return num_times
+
     def init_log(self):
         moveLog = {}
         log = (i + 1 for i in range(len(self.board)))
@@ -126,10 +152,10 @@ class gameObject():
         msg = f"current player: {game.currentPlayer} desired move: {choice}"
 
         self.printLineBreak(text=msg, prefix=True)
-        #print(f"lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} nextTurn: {self.nextTurn}")
+        # print(f"lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} nextTurn: {self.nextTurn}")
         self.lastTurn = self.currentTurn
         self.currentTurn = self.nextTurn
-        #self.nextTurn = self.nextTurn + 1
+        # self.nextTurn = self.nextTurn + 1
 
         openSpaces = self.possible_moves(self.board)
         choiceAccepted = self.check_move(self.currentPlayer, choice)
@@ -176,7 +202,7 @@ class gameObject():
             self.modPlayerPts(player, 1)
 
             self.printLineBreak(text=f"This turn is over", dbl_space=True)
-            #print(f"turnKey: {self.turnKey} lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} mextTurn: {self.nextTurn} lastMove: {self.lastMove}")
+            # print(f"turnKey: {self.turnKey} lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} mextTurn: {self.nextTurn} lastMove: {self.lastMove}")
             return True
         except:
             print("something failed in endTurn")
@@ -188,7 +214,7 @@ class gameObject():
         rows = [(height * length) - length + i for i in range(length)]
         for i in rows:
             if board[i]['color'] == -1:
-                #print(str(i) + " is a possible move")
+                # print(str(i) + " is a possible move")
                 open_spaces.append(i)
             if board[i]['color'] in [1, 2]:
                 taken.append(i)
@@ -204,7 +230,7 @@ class gameObject():
             #       open_spaces.append(k)
             #   k=k-8
 
-                #print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
+                # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
         if len(open_spaces) > 1:
             return open_spaces
         return False
@@ -369,7 +395,8 @@ class gameObject():
         if reason in reasons.keys():
             if reason == 1:
                 self.winner = data
-        print(f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+        print(
+            f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         self.inProgress = False
         self.printLineBreak()
         return self.inProgress
@@ -397,11 +424,11 @@ if __name__ == '__main__':
                 game.length + i for i in range(game.length)]
         for i in rows:
             if board[i]['color'] == -1:
-                #print(str(i) + " is a possible move")
+                # print(str(i) + " is a possible move")
                 open_spaces.append(i)
             if board[i]['color'] in [1, 2]:
                 j = i
-                #print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
+                # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
                 while board[j]['color'] in [1, 2] and j - game.length > 0:
                     j = j - game.length
                     try:
@@ -414,6 +441,7 @@ if __name__ == '__main__':
     def confirm_runtime():
         num_times = False
         confirm = False
+
         while not confirm:
             while not num_times:
                 num_times = input(
@@ -432,27 +460,53 @@ if __name__ == '__main__':
                 num_times = False
             if check == num_times:
                 confirm = True
+
                 return num_times
 
     def process_tally(tally):
-        aggre = {1: {'winningMoves': [], 'count': 0},
-                 2: {'winningMoves': [], 'count': 0}}
+        aggre = {1: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0},
+                 2: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0}}
         for i in tally:
             aggre[i[0]]['winningMoves'].append([i[1], i[2]])
             aggre[i[0]]['count'] += 1
-        print('\nwinner\t winning sequence\twinning move')
+            aggre[i[0]]['score'] += i[3][i[0]]
+            aggre[i[0]]['numScore'] += 1
+        print('\nwinner\t winning sequence\twinning move\tplayer:score')
         for i in tally:
             print('')
             for j in i:
                 print(j, end='\t')
+        p1 = aggre[1]['count']
+        p2 = aggre[2]['count']
+        p1numScoreArray = []
+        p2numScoreArray = []
+        for i in tally:
+            p1numScoreArray.append(i[3][1])
+            p2numScoreArray.append(i[3][2])
+        print(p1numScoreArray)
+        print(p2numScoreArray)
+        print(
+            f'\nOf {p1+p2:} games, Player 1 won {p1/(p1+p2)*100:.2f}% and Player 2 won {p2/(p1+p2)*100:.2f}% ')
+        # print(
+        #    f'\nPlayer 1 mean:{p1/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {p2/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
+        print(f'\n\tPlayer 1\t\tPlayer 2 ')
+        print(f'\nwinRate:\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
+        print(
+            f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t{p2/len(p2numScoreArray):.2f}')
+        print(
+            f'\nmax:\t{max(p1numScoreArray):}\t\t\t{max(p2numScoreArray):}')
+        print(
+            f'\nmin:\t{min(p1numScoreArray):}\t\t\t{min(p2numScoreArray):}')
+        #print('\n', aggre)
         return aggre
 
-    num_times = confirm_runtime()
+    game = gameObject(length=8, height=8)
+    num_times = game.iterations
     tally = []
     # if game.serialConnected:
     #   game.init_serial()
     for tt in range(num_times):
-        game = gameObject(length=8, height=8)
+
         game.start_game()
         print(game.length, game.height)
         while game.inProgress:
@@ -465,7 +519,7 @@ if __name__ == '__main__':
                 if game.debug:
                     wait = input("press enter to continue")
 
-                #game.check_move(game.board,  game.currentPlayer, random.choice(selectFrom))
+                # game.check_move(game.board,  game.currentPlayer, random.choice(selectFrom))
                 while game.inProgress:
                     selectFrom = possible_moves(game.board)
                     if len(selectFrom) > 0:
@@ -476,7 +530,7 @@ if __name__ == '__main__':
 
                         game.start_turn(game.currentPlayer,
                                         random.choice(selectFrom))
-                        #print(f"\nlast move: {game.lastMove} current move: {game.currentMove}")
+                        # print(f"\nlast move: {game.lastMove} current move: {game.currentMove}")
                         game.switch_player()
 
                     else:
@@ -485,7 +539,8 @@ if __name__ == '__main__':
                         game.game_over(0, game.currentPlayer)
                         print(game.printLineBreak())
         print(game.isWinner)
-        tally.append([game.isWinner[1], game.isWinner[2], game.isWinner[3]])
+        tally.append([game.isWinner[1], game.isWinner[2],
+                      game.isWinner[3], game.playerScore])
 
         # game.whose_turn()
     results = process_tally(tally)
