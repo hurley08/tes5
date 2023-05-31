@@ -3,6 +3,7 @@ import sys
 import serial.tools
 import time
 import serial.tools.list_ports as list_ports
+from statistics import median, mode
 # board needs to be made into a subclass or separate class
 
 
@@ -29,7 +30,8 @@ class gameObject():
         self.inProgress = False
         self.winner = False
         self.playerScore = {}
-        self.drawBoard = True
+        self.drawBoardTurn = True
+        self.drawBoardGameOver = True
         self.iterations = self.confirm_runtime()
 
     def init_serial(self):
@@ -82,8 +84,11 @@ class gameObject():
         print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
 
     def modPlayerPts(self, player=-1, delta=0):
-        if player == -1:
+        print(player)
+        if player > 0:
             player = self.currentPlayer
+        else:
+            player = 1 if self.currentPlayer == 2 else 2
         try:
             self.playerScore[player] = self.playerScore[player] + delta
             print(f"{player=} score was updated by {delta=}")
@@ -183,23 +188,23 @@ class gameObject():
         self.isWinner = self.check_win(player, choice, self.board)
         isWinner = self.isWinner
         if isWinner[0]:
-            self.modPlayerPts(player, 10)
+            self.modPlayerPts(player=player, 10)
             otherPlayer = 1 if player == 2 else 2
             self.modPlayerPts(otherPlayer, -12)
             print(
                 f'{isWinner[0]=}, player: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
-            if self.drawBoard:
+            if self.drawBoardGameOver:
                 draw_board(jsd)
             self.game_over(1, player)
             return True
 
         try:
-            if self.drawBoard:
+            if self.drawBoardTurn:
                 self.draw_board(self.board)
 
             # draw_board(self.board)
-            self.modPlayerPts(player, 1)
+            self.modPlayerPts(player=player, 1)
 
             self.printLineBreak(text=f"This turn is over", dbl_space=True)
             # print(f"turnKey: {self.turnKey} lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} mextTurn: {self.nextTurn} lastMove: {self.lastMove}")
@@ -311,7 +316,9 @@ class gameObject():
 
     # checks if move results in a connect 4
     def check_win(self, player, last_move, board=None):
-        self.printLineBreak(
+        print(\f'{player==self.currentPlayer=}')s
+
+        elf.printLineBreak(
             text=f'Checking for Win with {last_move:}', prefix=True)
         l = self.length
         h = self.height
@@ -327,10 +334,13 @@ class gameObject():
                     sequence = []
                 if len(sequence) == 2:
                     print('connect2!')
+                    modPlayerPts(player=player, 3)
                 if len(sequence) == 3:
                     print('connect3!')
+                    modPlayerPts(player=player, 5)
                 if len(sequence) == 4:
                     if self.locate_col(sequence):
+                        modPlayerPts(player=player, 10)
                         return True, player, sequence, last_move
         sequence = []
         for i in self.diag2:
@@ -339,12 +349,15 @@ class gameObject():
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
                     print('connect2!')
+                    modPlayerPts(player=player, 3)
                 if len(sequence) == 3:
                     print('connect3!')
+                    modPlayerPts(player=player, 5)
                 if len(sequence) == 4:
                     sequence.reverse()
                     fa = self.locate_col(sequence)
                     if fa:
+                        modPlayerPts(player=player, 10)
                         return True, player, sequence, last_move
         sequence = []
 
@@ -356,9 +369,12 @@ class gameObject():
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
                     print('connect2!')
+                    modPlayerPts(player=player, 3)
                 if len(sequence) == 3:
                     print('connect3!')
+                    modPlayerPts(player=player, 5)
                 if len(sequence) == 4:
+                    modPlayerPts(player=player, 10)
                     return True, player, sequence, last_move
 
         sequence = []
@@ -372,12 +388,16 @@ class gameObject():
                     sequence.append(i + last_move)
                     if len(sequence) == 2:
                         print('connect2!')
+                        modPlayerPts(player=player, 3)
                     if len(sequence) == 3:
                         print('connect3!')
+                        modPlayerPts(player=player, 5)
+                            print('connect3!')
                     if len(sequence) == 4:
                         fa = self.check_spillover(
                             sequence, direction='horizontal')
                         if fa:
+                            modPlayerPts(player=player, 10)
                             return True, player, sequence, last_move
                         else:
                             sequence = []
@@ -395,8 +415,10 @@ class gameObject():
         if reason in reasons.keys():
             if reason == 1:
                 self.winner = data
+
         print(
             f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+
         self.inProgress = False
         self.printLineBreak()
         return self.inProgress
@@ -490,11 +512,15 @@ if __name__ == '__main__':
         # print(
         #    f'\nPlayer 1 mean:{p1/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {p2/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
         print(f'\n\tPlayer 1\t\tPlayer 2 ')
-        print(f'\nwinRate:\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
+        print(f'\nwin%\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
         print(
-            f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t{p2/len(p2numScoreArray):.2f}')
+            f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t\t{p2/len(p2numScoreArray):.2f}')
         print(
             f'\nmax:\t{max(p1numScoreArray):}\t\t\t{max(p2numScoreArray):}')
+        print(
+            f'\nmedn:\t{median(p1numScoreArray):}\t\t\t{median(p2numScoreArray):}')
+        print(
+            f'\nmode:\t{mode(p1numScoreArray):}\t\t\t{mode(p2numScoreArray):}')
         print(
             f'\nmin:\t{min(p1numScoreArray):}\t\t\t{min(p2numScoreArray):}')
         #print('\n', aggre)

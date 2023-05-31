@@ -31,3 +31,4 @@ Create a connect 4 system that can be played by a user against and automated opp
 - [ ]		One level of output contains highly granular debug information
 - [ ]		Game messages should have some formatting for presentation
 - [ ]		User can modify Game parameters at execution via command line arguments
+- [ ] 		process_tally and confirm_runtime methods should be a part of gameObjects class
