@@ -29,7 +29,7 @@ class gameObject():
         self.serialConnected = False
         self.inProgress = False
         self.winner = False
-        self.playerScore = {}
+        self.playerCumulative = {1: 0, 2: 0}
         self.drawBoardTurn = True
         self.drawBoardGameOver = True
         self.iterations = self.confirm_runtime()
@@ -83,19 +83,26 @@ class gameObject():
         dbl_space = '\n\n' if dbl_space else None
         print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
 
-    def modPlayerPts(self, player=-1, delta=0):
+    def modPlayerPts(self, player=-1, delta=0, cumulative=False):
         print(player)
-        if player > 0:
-            player = self.currentPlayer
-        else:
-            player = 1 if self.currentPlayer == 2 else 2
-        try:
-            self.playerScore[player] = self.playerScore[player] + delta
-            print(f"{player=} score was updated by {delta=}")
-            return True
-        except:
-            print(f"{player=} score NOT updated by {delta=}")
-            return False
+        if not cumulative:
+            if player > 0:
+                player = self.currentPlayer
+            else:
+                player = 1 if self.currentPlayer == 2 else 2
+            try:
+                self.playerScore[player] = self.playerScore[player] + delta
+                print(f"{player=} score was updated by {delta=}")
+                return True
+            except:
+                print(f"{player=} score NOT updated by {delta=}")
+                return False
+        if cumulative:
+            self.playerCumulative[1] += self.playerScore[1]
+            self.playerCumulative[2] += self.playerScore[2]
+            print(f'\nSeries tally was updated to reflect')
+            print(
+                f'\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
 
     def create_board(self, height=5, length=8):
         height = self.height
@@ -188,9 +195,8 @@ class gameObject():
         self.isWinner = self.check_win(player, choice, self.board)
         isWinner = self.isWinner
         if isWinner[0]:
-            self.modPlayerPts(player=player, 10)
-            otherPlayer = 1 if player == 2 else 2
-            self.modPlayerPts(otherPlayer, -12)
+            self.modPlayerPts(player=player, delta=10)
+            self.modPlayerPts(player=player * -1, delta=-12)
             print(
                 f'{isWinner[0]=}, player: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
@@ -202,12 +208,8 @@ class gameObject():
         try:
             if self.drawBoardTurn:
                 self.draw_board(self.board)
-
-            # draw_board(self.board)
-            self.modPlayerPts(player=player, 1)
-
+            self.modPlayerPts(player=player, delta=1)
             self.printLineBreak(text=f"This turn is over", dbl_space=True)
-            # print(f"turnKey: {self.turnKey} lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} mextTurn: {self.nextTurn} lastMove: {self.lastMove}")
             return True
         except:
             print("something failed in endTurn")
@@ -316,13 +318,13 @@ class gameObject():
 
     # checks if move results in a connect 4
     def check_win(self, player, last_move, board=None):
-        print(\f'{player==self.currentPlayer=}')s
-
-        elf.printLineBreak(
+       # print(\f'{player==self.currentPlayer=}')
+        self.printLineBreak(
             text=f'Checking for Win with {last_move:}', prefix=True)
         l = self.length
         h = self.height
         if not board:
+            board = self.board
             board = self.board
         sequence = []
         self.printLineBreak(text="Checking Diagonals", prefix=True)
@@ -334,13 +336,14 @@ class gameObject():
                     sequence = []
                 if len(sequence) == 2:
                     print('connect2!')
-                    modPlayerPts(player=player, 3)
+                   # self.modPlayerPts(player=player, delta=3)
+                   # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
                     print('connect3!')
-                    modPlayerPts(player=player, 5)
+                   # self.modPlayerPts(player=player, delta=5)
+                   # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     if self.locate_col(sequence):
-                        modPlayerPts(player=player, 10)
                         return True, player, sequence, last_move
         sequence = []
         for i in self.diag2:
@@ -349,15 +352,16 @@ class gameObject():
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
                     print('connect2!')
-                    modPlayerPts(player=player, 3)
+                   # self.modPlayerPts(player=player, delta=3)
+                   # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
                     print('connect3!')
-                    modPlayerPts(player=player, 5)
+                    #self.modPlayerPts(player=player, delta=5)
+                    #self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     sequence.reverse()
                     fa = self.locate_col(sequence)
                     if fa:
-                        modPlayerPts(player=player, 10)
                         return True, player, sequence, last_move
         sequence = []
 
@@ -369,12 +373,13 @@ class gameObject():
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
                     print('connect2!')
-                    modPlayerPts(player=player, 3)
+                    #self.modPlayerPts(player=player, delta=3)
+                    #self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
                     print('connect3!')
-                    modPlayerPts(player=player, 5)
+                    #self.modPlayerPts(player=player, delta=5)
+                    #self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
-                    modPlayerPts(player=player, 10)
                     return True, player, sequence, last_move
 
         sequence = []
@@ -388,16 +393,16 @@ class gameObject():
                     sequence.append(i + last_move)
                     if len(sequence) == 2:
                         print('connect2!')
-                        modPlayerPts(player=player, 3)
+                       # self.modPlayerPts(player=player, delta=3)
+                       # self.modPlayerPts(player=player * -1, delta=-1)
                     if len(sequence) == 3:
                         print('connect3!')
-                        modPlayerPts(player=player, 5)
-                            print('connect3!')
+                       # self.modPlayerPts(player=player, delta=5)
+                       # self.modPlayerPts(player=player * -1, delta=-3)
                     if len(sequence) == 4:
                         fa = self.check_spillover(
                             sequence, direction='horizontal')
                         if fa:
-                            modPlayerPts(player=player, 10)
                             return True, player, sequence, last_move
                         else:
                             sequence = []
@@ -415,6 +420,8 @@ class gameObject():
         if reason in reasons.keys():
             if reason == 1:
                 self.winner = data
+        if self.modPlayerPts(cumulative=True):
+            print('Cumulative Scores updated yay!')
 
         print(
             f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
@@ -426,6 +433,47 @@ class gameObject():
         # if self.serialConnected:
     #       self.ardu.close()
     #+ i for i in range(8)]def #pcvpc(self):
+
+    def process_tally(self, tally):
+        aggre = {1: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0},
+                 2: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0}}
+        for i in tally:
+            aggre[i[0]]['winningMoves'].append([i[1], i[2]])
+            aggre[i[0]]['count'] += 1
+            aggre[i[0]]['score'] += i[3][i[0]]
+            aggre[i[0]]['numScore'] += 1
+        print('\nwinner\t winning seq.\twinning move\tplayer:score')
+        for i in tally:
+            print('')
+            for j in i:
+                print(j, end='\t')
+        p1 = aggre[1]['count']
+        p2 = aggre[2]['count']
+        p1numScoreArray = []
+        p2numScoreArray = []
+        for i in tally:
+            p1numScoreArray.append(i[3][1])
+            p2numScoreArray.append(i[3][2])
+        print(p1numScoreArray)
+        print(p2numScoreArray)
+        print(
+            f'\nOf {p1+p2:} games, Player 1 won {p1/(p1+p2)*100:.2f}% and Player 2 won {p2/(p1+p2)*100:.2f}% ')
+        # print(
+        #    f'\nPlayer 1 mean:{p1/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {p2/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
+        print(f'\n\tPlayer 1\t\tPlayer 2 ')
+        print(f'\nwin%\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
+        print(
+            f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t\t{p2/len(p2numScoreArray):.2f}')
+        print(
+            f'\nmax:\t{max(p1numScoreArray):}\t\t\t{max(p2numScoreArray):}')
+        print(
+            f'\nmedn:\t{median(p1numScoreArray):}\t\t\t{median(p2numScoreArray):}')
+        print(
+            f'\nmode:\t{mode(p1numScoreArray):}\t\t\t{mode(p2numScoreArray):}')
+        print(
+            f'\nmin:\t{min(p1numScoreArray):}\t\t\t{min(p2numScoreArray):}')
+        #print('\n', aggre)
+        return aggre
 
 
 if __name__ == '__main__':
@@ -459,72 +507,6 @@ if __name__ == '__main__':
                     except:
                         print("vreak")
         return open_spaces
-
-    def confirm_runtime():
-        num_times = False
-        confirm = False
-
-        while not confirm:
-            while not num_times:
-                num_times = input(
-                    'press enter number of iterations to continue: ')
-                try:
-                    num_times = int(num_times)
-                except:
-                    num_times = False
-            check = input(
-                f'You entered {num_times:}. Confirm by re-entering this value:')
-            try:
-                check = int(check)
-            except:
-                num_times = False
-            if check != num_times:
-                num_times = False
-            if check == num_times:
-                confirm = True
-
-                return num_times
-
-    def process_tally(tally):
-        aggre = {1: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0},
-                 2: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0}}
-        for i in tally:
-            aggre[i[0]]['winningMoves'].append([i[1], i[2]])
-            aggre[i[0]]['count'] += 1
-            aggre[i[0]]['score'] += i[3][i[0]]
-            aggre[i[0]]['numScore'] += 1
-        print('\nwinner\t winning sequence\twinning move\tplayer:score')
-        for i in tally:
-            print('')
-            for j in i:
-                print(j, end='\t')
-        p1 = aggre[1]['count']
-        p2 = aggre[2]['count']
-        p1numScoreArray = []
-        p2numScoreArray = []
-        for i in tally:
-            p1numScoreArray.append(i[3][1])
-            p2numScoreArray.append(i[3][2])
-        print(p1numScoreArray)
-        print(p2numScoreArray)
-        print(
-            f'\nOf {p1+p2:} games, Player 1 won {p1/(p1+p2)*100:.2f}% and Player 2 won {p2/(p1+p2)*100:.2f}% ')
-        # print(
-        #    f'\nPlayer 1 mean:{p1/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {p2/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
-        print(f'\n\tPlayer 1\t\tPlayer 2 ')
-        print(f'\nwin%\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
-        print(
-            f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t\t{p2/len(p2numScoreArray):.2f}')
-        print(
-            f'\nmax:\t{max(p1numScoreArray):}\t\t\t{max(p2numScoreArray):}')
-        print(
-            f'\nmedn:\t{median(p1numScoreArray):}\t\t\t{median(p2numScoreArray):}')
-        print(
-            f'\nmode:\t{mode(p1numScoreArray):}\t\t\t{mode(p2numScoreArray):}')
-        print(
-            f'\nmin:\t{min(p1numScoreArray):}\t\t\t{min(p2numScoreArray):}')
-        #print('\n', aggre)
-        return aggre
 
     game = gameObject(length=8, height=8)
     num_times = game.iterations
@@ -569,4 +551,4 @@ if __name__ == '__main__':
                       game.isWinner[3], game.playerScore])
 
         # game.whose_turn()
-    results = process_tally(tally)
+    results = game.process_tally(tally)
