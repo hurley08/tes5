@@ -1,7 +1,5 @@
 import random
-import sys
 import serial.tools
-import time
 import serial.tools.list_ports as list_ports
 from statistics import median, mode
 # board needs to be made into a subclass or separate class
@@ -16,7 +14,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, board={}, height=5, length=8, isBot=False):
+    def __init__(self, waitTime=0.1, board=None, height=5, length=8, isBot=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -182,7 +180,7 @@ class gameObject():
         self.printLineBreak(text="Submitting Move", prefix=True)
         return self.take_move(self.currentPlayer, choice)
 
-    def draw_win(self, sequence, board={}):
+    def draw_win(self, sequence, board=None):
         if not board:
             board = self.board
         for i in sequence:
@@ -248,7 +246,7 @@ class gameObject():
             except:
                 print("vreak")
         if len(open_spaces) == 0:
-            return game_over(reason=-1, data=self.whose_turn())
+            return self.game_over(reason=-1, data=self.whose_turn())
         return(open_spaces)
 # if turnKey == True nextTurn is the turn in progress lastMove is the most recent piece placed at a space and
 
@@ -280,7 +278,7 @@ class gameObject():
 
     def define_win_dim(self):
         l = self.length
-        h = self.height
+       # h = self.height
         self.diag1 = [-(l - 1) * 3, -(l - 1) * 2, -(l - 1),
                       0, l - 1, (l - 1) * 2, (l - 1) * 3]
         self.diag2 = [-(l + 1) * 3, -(l + 1) * 2, -(l + 1),
@@ -329,7 +327,7 @@ class gameObject():
         sequence = []
         self.printLineBreak(text="Checking Diagonals", prefix=True)
         for i in self.diag1:
-            if 0 <= i + last_move < (self.height * self.length) - 1:
+            if 0 <= i + last_move < (h * l) - 1:
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                 else:
@@ -347,7 +345,7 @@ class gameObject():
                         return True, player, sequence, last_move
         sequence = []
         for i in self.diag2:
-            if 0 <= i + last_move < (self.length * self.height):
+            if 0 <= i + last_move < (h * l):
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
@@ -356,8 +354,8 @@ class gameObject():
                    # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
                     print('connect3!')
-                    #self.modPlayerPts(player=player, delta=5)
-                    #self.modPlayerPts(player=player * -1, delta=-3)
+                    # self.modPlayerPts(player=player, delta=5)
+                    # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     sequence.reverse()
                     fa = self.locate_col(sequence)
@@ -368,17 +366,17 @@ class gameObject():
         self.printLineBreak(text="Checking Laterals", prefix=True)
         sequence = []
         for i in self.vertical:
-            if 0 <= i + last_move < (self.height * self.length):
+            if 0 <= i + last_move < (h * l):
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
                     print('connect2!')
-                    #self.modPlayerPts(player=player, delta=3)
-                    #self.modPlayerPts(player=player * -1, delta=-1)
+                    # self.modPlayerPts(player=player, delta=3)
+                    # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
                     print('connect3!')
-                    #self.modPlayerPts(player=player, delta=5)
-                    #self.modPlayerPts(player=player * -1, delta=-3)
+                    # self.modPlayerPts(player=player, delta=5)
+                    # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     return True, player, sequence, last_move
 
@@ -387,7 +385,7 @@ class gameObject():
 
         for i in self.horizontal:
             print(f"{i=}")
-            if (last_move + i < (self.length * self.height)) and (last_move + i > -1):
+            if (last_move + i < (h * l)) and (last_move + i > -1):
                 print(f"{last_move=},{last_move+i=},{board[last_move+i]=}")
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
@@ -461,7 +459,7 @@ class gameObject():
         # print(
         #    f'\nPlayer 1 mean:{p1/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {p2/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
         print(f'\n\tPlayer 1\t\tPlayer 2 ')
-        print(f'\nwin%\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
+        print(f'\nwin%:\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
         print(
             f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t\t{p2/len(p2numScoreArray):.2f}')
         print(
@@ -472,7 +470,7 @@ class gameObject():
             f'\nmode:\t{mode(p1numScoreArray):}\t\t\t{mode(p2numScoreArray):}')
         print(
             f'\nmin:\t{min(p1numScoreArray):}\t\t\t{min(p2numScoreArray):}')
-        #print('\n', aggre)
+        # print('\n', aggre)
         return aggre
 
 
