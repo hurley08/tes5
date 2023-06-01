@@ -24,11 +24,12 @@ Create a connect 4 system that can be played by a user against and automated opp
 - [x]		Game ends the current game following a win detect 
 - [x] 		Game can clear memory and begin a new game (if a series is set by User)
 - [ ]		Enable Reinforcement Learning
-- [ ]		Define conditions and rewards
-- [ ]		Define what constitutes a single Step (both player completes a turn)
-- [ ]		Game assigns points to each player for each game in a series
+- [x]		Define conditions and rewards
+- [x]		Define what constitutes a single Step (both player completes a turn)
+- [x]		Game assigns points to each player for each game in a series
 - [ ]		Game has at least 2 levels of output messages one and user can select
 - [ ]		One level of output contains highly granular debug information
-- [ ]		Game messages should have some formatting for presentation
+- [x]		Game messages should have some formatting for presentation
 - [ ]		User can modify Game parameters at execution via command line arguments
 - [ ] 		process_tally and confirm_runtime methods should be a part of gameObjects class
+- [ ]		Write unit tests 
