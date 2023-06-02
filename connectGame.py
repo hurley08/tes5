@@ -1,4 +1,5 @@
 import random
+import logging
 import serial.tools
 import serial.tools.list_ports as list_ports
 from statistics import median, mode
@@ -14,7 +15,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, board=None, height=5, length=8, isBot=False, drawBoardTurn=None):
+    def __init__(self, waitTime=0.1, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, logLevel='DEBUG'):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -33,6 +34,20 @@ class gameObject():
         self.iterations = self.confirm_runtime()
         if self.iterations > 20 and drawBoardTurn == None:
             self.drawBoardTurn = False
+        self.logLevel = logLevel
+        logger.debug(f'{self.logLevel set to {logLevel:}}')
+        self.logger, self.log = self.init_logger(logLevel)
+
+    def init_logger(self, logLevel):
+        logger = logging.getLogger('connectGame')
+        logger.setLevel(logLevel)
+        log = logging.StreamHandler()
+        log.setLevel(logLevel)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log.setFormatter(formatter)
+        logger.addHandler(log)
+        return logger, log
 
     def init_serial(self):
         self.ardu = serial.Serial()
@@ -52,12 +67,13 @@ class gameObject():
         self.inProgress = True
         self.winner = False
         self.board = self.create_board(height=self.height, length=self.length)
-        print('NEW GAME')
+        logger.info('NEW GAME')
         self.turnLog = self.init_log()
-        #print("init log")
+        logger.debug("init log")
         self.currentPlayer = random.choice([1, 2])
-        #print("starting player chosen: Player {self.currentPlayer}\n\n\n")
-        #print("setting game parameters")
+        logger.info(
+            "starting player chosen: Player {self.currentPlayer}\n\n\n")
+        logger.info("setting game parameters")
         self.define_win_dim()
         self.turnKey = False
         self.lastTurn = 0
@@ -65,7 +81,7 @@ class gameObject():
         self.nextTurn = 2
         self.lastMove = None
         self.currentMove = None
-        #print("done. commencing game")
+        logger.info("All's tweaked. Commencing game")
         self.playerScore = {1: 0, 2: 0}
         return self
 
@@ -81,8 +97,8 @@ class gameObject():
             buffer += 25
 
         dbl_space = '\n\n' if dbl_space else None
-        if self.debug:
-            print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
+
+        print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
 
     def modPlayerPts(self, player=-1, delta=0, cumulative=False):
         if not cumulative:
@@ -92,19 +108,17 @@ class gameObject():
                 player = 1 if self.currentPlayer == 2 else 2
             try:
                 self.playerScore[player] = self.playerScore[player] + delta
-                if self.debug:
-                    print(f"{player=} score was updated by {delta=}")
+                logger.info(f"{player=} score was updated by {delta=}")
                 return True
             except:
-                if self.debug:
-                    print(f"{player=} score NOT updated by {delta=}")
+                logger.warning(f"{player=} score NOT updated by {delta=}")
                 return False
         if cumulative:
             self.playerCumulative[1] += self.playerScore[1]
             self.playerCumulative[2] += self.playerScore[2]
             if self.debug:
-                print(f'\nSeries tally was updated to reflect')
-                print(
+                logger.info(f'\nSeries tally was updated to reflect')
+                logger.debug(
                     f'\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
 
     def create_board(self, height=5, length=8):
