@@ -14,14 +14,14 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, board=None, height=5, length=8, isBot=False):
+    def __init__(self, waitTime=0.1, board=None, height=5, length=8, isBot=False, drawBoardTurn=None):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
         self.height = height
         self.length = length
         self.board = board
-        print('self init')
+        #print('self init')
         self.isBot = isBot
         self.debug = False
         self.serialConnected = False
@@ -31,6 +31,8 @@ class gameObject():
         self.drawBoardTurn = True
         self.drawBoardGameOver = True
         self.iterations = self.confirm_runtime()
+        if self.iterations > 20 and drawBoardTurn == None:
+            self.drawBoardTurn = False
 
     def init_serial(self):
         self.ardu = serial.Serial()
@@ -50,12 +52,12 @@ class gameObject():
         self.inProgress = True
         self.winner = False
         self.board = self.create_board(height=self.height, length=self.length)
-        print('init board')
+        print('NEW GAME')
         self.turnLog = self.init_log()
-        print("init log")
+        #print("init log")
         self.currentPlayer = random.choice([1, 2])
-        print("starting player chosen: Player {self.currentPlayer}\n\n\n")
-        print("setting game parameters")
+        #print("starting player chosen: Player {self.currentPlayer}\n\n\n")
+        #print("setting game parameters")
         self.define_win_dim()
         self.turnKey = False
         self.lastTurn = 0
@@ -63,7 +65,7 @@ class gameObject():
         self.nextTurn = 2
         self.lastMove = None
         self.currentMove = None
-        print("done. commencing game")
+        #print("done. commencing game")
         self.playerScore = {1: 0, 2: 0}
         return self
 
@@ -79,10 +81,10 @@ class gameObject():
             buffer += 25
 
         dbl_space = '\n\n' if dbl_space else None
-        print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
+        if self.debug:
+            print(f'{prefixStr}{text}{filler*buffer:}', end=dbl_space)
 
     def modPlayerPts(self, player=-1, delta=0, cumulative=False):
-        print(player)
         if not cumulative:
             if player > 0:
                 player = self.currentPlayer
@@ -90,17 +92,20 @@ class gameObject():
                 player = 1 if self.currentPlayer == 2 else 2
             try:
                 self.playerScore[player] = self.playerScore[player] + delta
-                print(f"{player=} score was updated by {delta=}")
+                if self.debug:
+                    print(f"{player=} score was updated by {delta=}")
                 return True
             except:
-                print(f"{player=} score NOT updated by {delta=}")
+                if self.debug:
+                    print(f"{player=} score NOT updated by {delta=}")
                 return False
         if cumulative:
             self.playerCumulative[1] += self.playerScore[1]
             self.playerCumulative[2] += self.playerScore[2]
-            print(f'\nSeries tally was updated to reflect')
-            print(
-                f'\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
+            if self.debug:
+                print(f'\nSeries tally was updated to reflect')
+                print(
+                    f'\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
 
     def create_board(self, height=5, length=8):
         height = self.height
@@ -154,14 +159,17 @@ class gameObject():
                 print(f'\n{str(key+1)}\t| ', end='')
 
     def start_turn(self, player, choice=None):
-        self.printLineBreak(text='starting turn')
+        if self.debug:
+            self.printLineBreak(text='starting turn')
         self.turnKey = True
         msg = f"{self.lastTurn=}, {self.currentTurn=}, {self.nextTurn=}, {self.lastMove=}, {self.currentPlayer=}"
-        self.printLineBreak(text=msg, dbl_space=False)
+        if self.debug:
+            self.printLineBreak(text=msg, dbl_space=False)
 
         msg = f"current player: {game.currentPlayer} desired move: {choice}"
 
-        self.printLineBreak(text=msg, prefix=True)
+        if self.debug:
+            self.printLineBreak(text=msg, prefix=True)
         # print(f"lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} nextTurn: {self.nextTurn}")
         self.lastTurn = self.currentTurn
         self.currentTurn = self.nextTurn
@@ -177,7 +185,8 @@ class gameObject():
                 input('Integers 1-39 represent the spaces on the board. Choose one')))
         if choiceAccepted:
             self.currentMove = choice
-        self.printLineBreak(text="Submitting Move", prefix=True)
+        if self.debug:
+            self.printLineBreak(text="Submitting Move", prefix=True)
         return self.take_move(self.currentPlayer, choice)
 
     def draw_win(self, sequence, board=None):
@@ -196,7 +205,7 @@ class gameObject():
             self.modPlayerPts(player=player, delta=10)
             self.modPlayerPts(player=player * -1, delta=-12)
             print(
-                f'{isWinner[0]=}, player: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
+                f'GAME OVER, Winner: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
             if self.drawBoardGameOver:
                 draw_board(jsd)
@@ -207,7 +216,8 @@ class gameObject():
             if self.drawBoardTurn:
                 self.draw_board(self.board)
             self.modPlayerPts(player=player, delta=1)
-            self.printLineBreak(text=f"This turn is over", dbl_space=True)
+            if self.debug:
+                self.printLineBreak(text=f"This turn is over", dbl_space=True)
             return True
         except:
             print("something failed in endTurn")
@@ -271,7 +281,8 @@ class gameObject():
         self.board[choice]['color'] = self.currentPlayer
         self.board[choice]['occupied'] = True
         self.board[choice]['moveNumber'] = self.currentTurn
-        self.printLineBreak(text="Move Taken", prefix=True)
+        if self.debug:
+            self.printLineBreak(text="Move Taken", prefix=True)
         if self.serialConnected:
             self.output_to_serial(choice, player)
         return self.end_turn(self.currentPlayer, choice)
@@ -291,7 +302,8 @@ class gameObject():
         frame = [i for i in range(k * self.length, self.length * (k + 1))]
         frame2 = [i for i in range(
             self.length * int(array[0] / self.length), self.length * (int(array[0] / self.length) + 1))]
-        print(f'{frame=}, {array=}')
+        if self.debug:
+            print(f'{frame=}, {array=}')
         if direction == 'vertical':
             for i in array:
                 if i not in frame:
@@ -304,28 +316,33 @@ class gameObject():
             return True
 
     def locate_col(self, array):
-        print(array)
+        if self.debug:
+            print(array)
         sequence = []
         for address in array:
             prel = (int(address / game.length) + 1) * self.length - address
             sequence.append(prel)
         result = sorted(sequence) == list(
             range(min(sequence), max(sequence) + 1))
-        self.printLineBreak(dbl_space=True, text=f'{sequence:}')
+        if self.debug:
+            self.printLineBreak(dbl_space=True, text=f'{sequence:}')
         return result
 
-    # checks if move results in a connect 4
+        # checks if move results in a connect 4
+
     def check_win(self, player, last_move, board=None):
        # print(\f'{player==self.currentPlayer=}')
-        self.printLineBreak(
-            text=f'Checking for Win with {last_move:}', prefix=True)
+        if self.debug:
+            self.printLineBreak(
+                text=f'Checking for Win with {last_move:}', prefix=True)
         l = self.length
         h = self.height
         if not board:
             board = self.board
             board = self.board
         sequence = []
-        self.printLineBreak(text="Checking Diagonals", prefix=True)
+        if self.debug:
+            self.printLineBreak(text="Checking Diagonals", prefix=True)
         for i in self.diag1:
             if 0 <= i + last_move < (h * l) - 1:
                 if board[last_move + i]['color'] == player:
@@ -333,11 +350,13 @@ class gameObject():
                 else:
                     sequence = []
                 if len(sequence) == 2:
-                    print('connect2!')
+                    if self.debug:
+                        print('connect2!')
                    # self.modPlayerPts(player=player, delta=3)
                    # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
-                    print('connect3!')
+                    if self.debug:
+                        print('connect3!')
                    # self.modPlayerPts(player=player, delta=5)
                    # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
@@ -349,11 +368,13 @@ class gameObject():
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
-                    print('connect2!')
+                    if self.debug:
+                        print('connect2!')
                    # self.modPlayerPts(player=player, delta=3)
                    # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
-                    print('connect3!')
+                    if self.debug:
+                        print('connect3!')
                     # self.modPlayerPts(player=player, delta=5)
                     # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
@@ -363,40 +384,48 @@ class gameObject():
                         return True, player, sequence, last_move
         sequence = []
 
-        self.printLineBreak(text="Checking Laterals", prefix=True)
+        if self.debug:
+            self.printLineBreak(text="Checking Laterals", prefix=True)
         sequence = []
         for i in self.vertical:
             if 0 <= i + last_move < (h * l):
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                 if len(sequence) == 2:
-                    print('connect2!')
+                    if self.debug:
+                        print('connect2!')
                     # self.modPlayerPts(player=player, delta=3)
                     # self.modPlayerPts(player=player * -1, delta=-1)
                 if len(sequence) == 3:
-                    print('connect3!')
+                    if self.debug:
+                        print('connect3!')
                     # self.modPlayerPts(player=player, delta=5)
                     # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     return True, player, sequence, last_move
 
         sequence = []
-        self.printLineBreak(text="checking horizontal")
+        if self.debug:
+            self.printLineBreak(text="checking horizontal")
 
         for i in self.horizontal:
-            print(f"{i=}")
+            if self.debug:
+                print(f"{i=}")
             if (last_move + i < (h * l)) and (last_move + i > -1):
-                print(f"{last_move=},{last_move+i=},{board[last_move+i]=}")
+                if self.debug:
+                    print(f"{last_move=},{last_move+i=},{board[last_move+i]=}")
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                     if len(sequence) == 2:
-                        print('connect2!')
-                       # self.modPlayerPts(player=player, delta=3)
-                       # self.modPlayerPts(player=player * -1, delta=-1)
+                        if self.debug:
+                            print('connect2!')
+                        # self.modPlayerPts(player=player, delta=3)
+                        # self.modPlayerPts(player=player * -1, delta=-1)
                     if len(sequence) == 3:
-                        print('connect3!')
-                       # self.modPlayerPts(player=player, delta=5)
-                       # self.modPlayerPts(player=player * -1, delta=-3)
+                        if self.debug:
+                            print('connect3!')
+                        # self.modPlayerPts(player=player, delta=5)
+                        # self.modPlayerPts(player=player * -1, delta=-3)
                     if len(sequence) == 4:
                         fa = self.check_spillover(
                             sequence, direction='horizontal')
@@ -419,13 +448,14 @@ class gameObject():
             if reason == 1:
                 self.winner = data
         if self.modPlayerPts(cumulative=True):
-            print('Cumulative Scores updated yay!')
-
-        print(
-            f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+            if self.debug:
+                print('Cumulative Scores updated yay!')
+                print(
+                    f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
 
         self.inProgress = False
-        self.printLineBreak()
+        if self.debug:
+            self.printLineBreak()
         return self.inProgress
 
         # if self.serialConnected:
@@ -457,11 +487,11 @@ class gameObject():
         print(
             f'\nOf {p1+p2:} games, Player 1 won {p1/(p1+p2)*100:.2f}% and Player 2 won {p2/(p1+p2)*100:.2f}% ')
         # print(
-        #    f'\nPlayer 1 mean:{p1/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {p2/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
+        #    f'\nPlayer 1 mean:{sum(p1numScoreArray)/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {sum(p1numScoreArray)/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
         print(f'\n\tPlayer 1\t\tPlayer 2 ')
         print(f'\nwin%:\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
         print(
-            f'\nmean:\t{p1/len(p1numScoreArray):.2f}\t\t\t{p2/len(p2numScoreArray):.2f}')
+            f'\nmean:\t{sum(p1numScoreArray)/len(p1numScoreArray):.2f}\t\t\t{sum(p2numScoreArray)/len(p2numScoreArray):.2f}')
         print(
             f'\nmax:\t{max(p1numScoreArray):}\t\t\t{max(p2numScoreArray):}')
         print(
@@ -514,7 +544,8 @@ if __name__ == '__main__':
     for tt in range(num_times):
 
         game.start_game()
-        print(game.length, game.height)
+        if game.debug:
+            print(game.length, game.height)
         while game.inProgress:
 
             for i in range(len(game.board.keys())):
@@ -543,7 +574,8 @@ if __name__ == '__main__':
 
                         print("there are no spaces available")
                         game.game_over(0, game.currentPlayer)
-                        print(game.printLineBreak())
+                        if game.debug:
+                            print(game.printLineBreak())
         print(game.isWinner)
         tally.append([game.isWinner[1], game.isWinner[2],
                       game.isWinner[3], game.playerScore])
