@@ -1,0 +1,43 @@
+test cases
+
+
+class gameObject 
+	operable arguments
+			attributesOnly:   #setting these variables in init will not change behavior of game in the setup phase
+				waitTime
+				height
+				length
+				colors
+				playerCumulative
+				winner
+				board
+
+			changesFunctionality
+				debug							#can be used to modify logLevel of loggers					
+				disable_interactions			#bypass manually setting iterations
+				isBot							#should be used to toggle human v pc, human v human ,  pcvpc				drawBoardTurn					#Used to select if board should be printed at every end of turn 
+				drawBoardGameOver				#Used to select if board should be printed at the end of every game 
+				serialConnected 				#Use if moves should be sent to arduino for visual output
+				inProgress						#Control variable for games 
+				iterations						#number of games that should be played in series 
+				logger							logger object 
+
+
+init_logger
+	logLevel respected
+	formatter correctly applied
+	handler correct configured
+
+init_serial
+	game establishes serial connection with Arduino
+	game sets serial parameters correctly 
+	serialConnected attribute determines if this method will be executed
+
+
+draw_board
+	board defauilts to 5x8 with no inpt
+	board correctly applies input dimensions
+	Occupied spaces are indicated by blue or red circle
+	Unoccupied spaces are indicated by black circles
+	formatting for the graphical representation is as expected 
+	

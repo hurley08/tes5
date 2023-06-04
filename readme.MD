@@ -3,7 +3,8 @@ Goal.
 Create a connect 4 system that can be played by a user against and automated opponent or that can be played by two automated players. AI/machine learning implementation is the ultimate goal. 
 
 
-- [x]		User is able to set the dimensions of the board at start		
+- [x]		User is able to set the dimensions of the board at start
+- [ ]		User can select human or pc players		
 - [ ] 		User can choose moves 										
 - [x]		Game can detect horizontal connect4s 
 - [x]		Game can detect vertical connect4s 
@@ -27,9 +28,10 @@ Create a connect 4 system that can be played by a user against and automated opp
 - [x]		Define conditions and rewards
 - [x]		Define what constitutes a single Step (both player completes a turn)
 - [x]		Game assigns points to each player for each game in a series
-- [ ]		Game has at least 2 levels of output messages one and user can select
-- [ ]		One level of output contains highly granular debug information
+- [x]		Game has at least 2 levels of output messages one and user can select
+- [x]		One level of output contains highly granular debug information
 - [x]		Game messages should have some formatting for presentation
 - [ ]		User can modify Game parameters at execution via command line arguments
 - [ ] 		process_tally and confirm_runtime methods should be a part of gameObjects class
-- [ ]		Write unit tests 
+- [ ]		Write unit tests
+- [ ]		Allow selection of log file 
