@@ -16,7 +16,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, logLevel='DEBUG'):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL'):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -30,16 +30,20 @@ class gameObject():
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
-        self.drawBoardTurn = True
-        self.drawBoardGameOver = True
-        self.iterations = self.confirm_runtime()
+        self.drawBoardTurn = drawBoardTurn
+        self.drawBoardGameOver = drawBoardGameOver
+
+        if not disable_interaction:
+            self.iterations = self.confirm_runtime()
+        if disable_interaction:
+            self.iterations = 10
         if self.iterations > 20 and drawBoardTurn == None:
             self.drawBoardTurn = False
         self.logLevel = logLevel
         #logger.debug('{self.logLevel set to {logLevel:}}')
         logger, log = self.init_logger(logLevel)
         self.logger = logger
-        self.log = log 
+        self.log = log
 
     def init_logger(self, logLevel):
         logger = logging.getLogger(__name__)
@@ -120,7 +124,8 @@ class gameObject():
             self.playerCumulative[1] += self.playerScore[1]
             self.playerCumulative[2] += self.playerScore[2]
             self.logger.info(f'\nSeries tally was updated to reflect')
-            self.logger.debug('\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
+            self.logger.debug(
+                '\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
 
     def create_board(self, height=5, length=8):
         height = self.height
@@ -174,16 +179,16 @@ class gameObject():
                 print(f'\n{str(key+1)}\t| ', end='')
 
     def start_turn(self, player, choice=None):
-        
+
         self.logger.info("Starting  Turn")
         self.turnKey = True
         msg = f"{self.lastTurn=}, {self.currentTurn=}, {self.nextTurn=}, {self.lastMove=}, {self.currentPlayer=}"
-        
+
         #self.printLineBreak(text=msg, dbl_space=False)
 
         msg = f"current player: {game.currentPlayer} desired move: {choice}"
         self.logger.info(msg)
-        
+
         #self.printLineBreak(text=msg, prefix=True)
         # print(f"lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} nextTurn: {self.nextTurn}")
         self.lastTurn = self.currentTurn
@@ -200,7 +205,7 @@ class gameObject():
                 input('Integers 1-39 represent the spaces on the board. Choose one')))
         if choiceAccepted:
             self.currentMove = choice
-        
+
             self.logger.info("Submitting Move")
         return self.take_move(self.currentPlayer, choice)
 
@@ -314,8 +319,8 @@ class gameObject():
         k = int(game.length / array[0])
         frame = [i for i in range(k * self.length, self.length * (k + 1))]
         frame2 = [i for i in range(
-        self.length * int(array[0] / self.length), self.length * (int(array[0] / self.length) + 1))]
-        
+            self.length * int(array[0] / self.length), self.length * (int(array[0] / self.length) + 1))]
+
         self.logger.debug('{frame=}, {array=}')
         if direction == 'vertical':
             for i in array:
@@ -388,7 +393,6 @@ class gameObject():
                         return True, player, sequence, last_move
         sequence = []
 
-        
         self.logger.info("Checking Laterals")
         sequence = []
         for i in self.vertical:
@@ -407,19 +411,20 @@ class gameObject():
                     return True, player, sequence, last_move
 
         sequence = []
-        
+
         self.logger.info("checking horizontal")
 
         for i in self.horizontal:
-            
+
             self.logger.debug(f"{i=}")
             if (last_move + i < (h * l)) and (last_move + i > -1):
-                
-                self.logger.debug("{last_move=},{last_move+i=},{board[last_move+i]=}")
+
+                self.logger.debug(
+                    "{last_move=},{last_move+i=},{board[last_move+i]=}")
                 if board[last_move + i]['color'] == player:
                     sequence.append(i + last_move)
                     if len(sequence) == 2:
-                       self.logger.debug('connect2!')
+                        self.logger.debug('connect2!')
                         # self.modPlayerPts(player=player, delta=3)
                         # self.modPlayerPts(player=player * -1, delta=-1)
                     if len(sequence) == 3:
@@ -448,13 +453,14 @@ class gameObject():
             if reason == 1:
                 self.winner = data
         if self.modPlayerPts(cumulative=True):
-            
+
             self.logger.info('Cumulative Scores updated yay!')
-            print(f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+            print(
+                f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
 
         self.inProgress = False
-        
-        #self.printLineBreak()
+
+        # self.printLineBreak()
         return self.inProgress
 
         # if self.serialConnected:
@@ -473,7 +479,7 @@ class gameObject():
         for i in tally:
             self.logger.debug('')
             for j in i:
-                self.logger.debug(str(j)+'\t')
+                self.logger.debug(str(j) + '\t')
         p1 = aggre[1]['count']
         p2 = aggre[2]['count']
         p1numScoreArray = []
@@ -484,7 +490,7 @@ class gameObject():
         self.logger.debug('%s', p1numScoreArray)
         self.logger.debug('%s', p2numScoreArray)
 
-        #print(
+        # print(
         #    f'\nOf {p1+p2:} games, Player 1 won {p1/(p1+p2)*100:.2f}% and Player 2 won {p2/(p1+p2)*100:.2f}% ')
         # print(
         #    f'\nPlayer 1 mean:{sum(p1numScoreArray)/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {sum(p1numScoreArray)/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
@@ -538,7 +544,7 @@ if __name__ == '__main__':
                         game.logger.error("vreak")
         return open_spaces
 
-    game = gameObject(length=8, height=8)
+    game = gameObject(length=16, height=16)
     num_times = game.iterations
     tally = []
     # if game.serialConnected:
