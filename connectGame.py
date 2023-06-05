@@ -1,10 +1,13 @@
+import serial
+import coverage
 import random
 import logging
-import serial.tools
-import serial.tools.list_ports as list_ports
 from statistics import median, mode
 import time
 # board needs to be made into a subclass or separate class
+
+cov = coverage.Coverage()
+cov.start()
 
 
 class gameModel():
@@ -592,3 +595,6 @@ if __name__ == '__main__':
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
+cov.stop()
+cov.save()
+cov.html_report()
