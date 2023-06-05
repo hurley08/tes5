@@ -19,17 +19,18 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL'):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=True):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
         self.height = height
         self.length = length
         self.board = board
-        #print('self init')
+        # print('self init')
         self.isBot = isBot
         self.debug = False
         self.serialConnected = False
+        self.commsArduino = commsArduino
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
@@ -43,7 +44,7 @@ class gameObject():
         if self.iterations > 20 and drawBoardTurn == None:
             self.drawBoardTurn = False
         self.logLevel = logLevel
-        #logger.debug('{self.logLevel set to {logLevel:}}')
+        # logger.debug('{self.logLevel set to {logLevel:}}')
         logger, log = self.init_logger(logLevel)
         self.logger = logger
         self.log = log
@@ -60,11 +61,30 @@ class gameObject():
         return logger, log
 
     def init_serial(self):
-        self.ardu = serial.Serial()
-        self.ardu.baudrate = 115200
-        self.ardu.port = '/dev/tty.usbserial-0001'
-        if self.ardu.open():
-            self.serialConnected = True
+        reAttempts = 5
+        self.logger.warning(
+            'There must be an arduino connected and enumerated on the port listed in ardu.port or this will fail')
+        if not self.serialConnected:
+
+            self.ardu = serial.Serial()
+            self.ardu.baudrate = 115200
+            self.ardu.port = 'COM3'
+
+        while reAttempts > -1:
+            print(self.ardu, self.ardu.is_open)
+            self.logger.debug('Open Attempt')
+            print(self.ardu.open(), self.ardu.is_open)
+            if self.ardu.is_open:
+                self.logger.debug(self.ardu.is_open)
+                self.serialConnected = True
+            else:
+                self.ardu.close()
+                self.logger.info(f'{reAttempts=}')
+                self.logger.debug(self.ardu)
+                print(f'{reAttempts=}, {self.ardu}')
+                reAttempts = reAttempts - 1
+            if reAttempts == -1:
+                break
 
     def output_to_serial(self, space, player):
         colorr = {1: {'r': 50, 'g': 150, 'b': 50},
@@ -74,7 +94,10 @@ class gameObject():
         self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
 
     def start_game(self):
+        if self.commsArduino:
+            self.init_serial()
         self.inProgress = True
+
         self.winner = False
         self.board = self.create_board(height=self.height, length=self.length)
         self.logger.info('NEW GAME')
@@ -187,12 +210,12 @@ class gameObject():
         self.turnKey = True
         msg = f"{self.lastTurn=}, {self.currentTurn=}, {self.nextTurn=}, {self.lastMove=}, {self.currentPlayer=}"
 
-        #self.printLineBreak(text=msg, dbl_space=False)
+        # self.printLineBreak(text=msg, dbl_space=False)
 
         msg = f"current player: {game.currentPlayer} desired move: {choice}"
         self.logger.info(msg)
 
-        #self.printLineBreak(text=msg, prefix=True)
+        # self.printLineBreak(text=msg, prefix=True)
         # print(f"lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} nextTurn: {self.nextTurn}")
         self.lastTurn = self.currentTurn
         self.currentTurn = self.nextTurn
@@ -460,14 +483,13 @@ class gameObject():
             self.logger.info('Cumulative Scores updated yay!')
             print(
                 f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
-
+        if self.serialConnected:
+            self.ardu.close()
         self.inProgress = False
 
         # self.printLineBreak()
         return self.inProgress
 
-        # if self.serialConnected:
-    #       self.ardu.close()
     #+ i for i in range(8)]def #pcvpc(self):
 
     def process_tally(self, tally):
