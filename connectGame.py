@@ -66,19 +66,17 @@ class gameObject():
             'There must be an arduino connected and enumerated on the port listed in ardu.port or this will fail')
         if not self.serialConnected:
 
-            self.ardu = serial.Serial()
-            self.ardu.baudrate = 115200
-            self.ardu.port = 'COM3'
+            self.ardu = serial.Serial("COM3", 115200)
 
         while reAttempts > -1:
-            print(self.ardu, self.ardu.is_open)
-            self.logger.debug('Open Attempt')
-            print(self.ardu.open(), self.ardu.is_open)
             if self.ardu.is_open:
                 self.logger.debug(self.ardu.is_open)
                 self.serialConnected = True
             else:
+                self.ardu.cancel_read
                 self.ardu.close()
+                time.sleep(1)
+                self.ardu.open()
                 self.logger.info(f'{reAttempts=}')
                 self.logger.debug(self.ardu)
                 print(f'{reAttempts=}, {self.ardu}')
@@ -617,6 +615,7 @@ if __name__ == '__main__':
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
+ser.close()
 cov.stop()
 cov.save()
 cov.html_report()
