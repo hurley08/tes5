@@ -1,12 +1,40 @@
 rewards and penalties
 
 
-rewards:
-placing a piece: 1
-connecting 2: 3
-connecting 3: 5
-connecting 4: 10
+	rewards:
+		placing a piece: 1
+		connecting 2: 3
+		connecting 3: 5
+		connecting 4: 10
+	penalties:
+		allowing opponent to connect 2: -1
+		allowing opponent to connect 3: -3
+		allowing an opponent to connect 4: -12
 
-allowing opponent to connect 2: -1
-allowing opponent to connect 3: -3
-allowing an opponent to connect 4: -12
+
+
+action space
+	1. choose randomly from allowable spaces
+	2. choose a space that increases an existing sequence
+	3. choose a space that prevents the opponent from increasing a sequence
+
+
+
+game_states
+	NoWinner
+	Winner
+
+
+	P1_Turn_noWinner
+	P2_Turn_noWinner
+	P1_Turn_Winner
+	P2_Turn_Winner
+
+
+
+Objects (ideally)
+	Game/Environment	Handles the execution of a game, stores internal game parameters
+	Board				Contains the state of the board, previous moves, game states 
+	Player				Select moves, tracks moves made, accumulates rewards and penalties
+	Broadcaster 		Outputs game information for GUI (we use arduino through serial currently)
+	Tournament ()		Handles series of games

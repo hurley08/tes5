@@ -19,7 +19,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=True):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False, comPort="COM3"):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -36,6 +36,7 @@ class gameObject():
         self.playerCumulative = {1: 0, 2: 0}
         self.drawBoardTurn = drawBoardTurn
         self.drawBoardGameOver = drawBoardGameOver
+        self.comPort = comPort
 
         if not disable_interaction:
             self.iterations = self.confirm_runtime()
@@ -615,7 +616,7 @@ if __name__ == '__main__':
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
-ser.close()
+# ser.close()
 cov.stop()
 cov.save()
 cov.html_report()
