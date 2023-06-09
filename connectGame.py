@@ -29,13 +29,17 @@ class gameObject():
         # print('self init')
         self.isBot = isBot
         self.debug = False
-        self.serialConnected = False
-        self.commsArduino = commsArduino
+        
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
         self.drawBoardTurn = drawBoardTurn
         self.drawBoardGameOver = drawBoardGameOver
+
+        self.serialConnected = False
+        self.commsArduino = commsArduino 
+        if serialConnected == False and self.commsArduino == True:
+            self.init_serial()
 
         if not disable_interaction:
             self.iterations = self.confirm_runtime()
@@ -65,17 +69,20 @@ class gameObject():
         self.logger.warning(
             'There must be an arduino connected and enumerated on the port listed in ardu.port or this will fail')
         if not self.serialConnected:
-
-            self.ardu = serial.Serial()
+            self.ardu.port = '/dev/tty.usbserial-0001'
             self.ardu.baudrate = 115200
-            self.ardu.port = 'COM3'
+            self.ardu = serial.Serial()
+            
+            
+            
 
-        while reAttempts > -1:
-            print(self.ardu, self.ardu.is_open)
+        while self.serialConnected == False:
             self.logger.debug('Open Attempt')
-            print(self.ardu.open(), self.ardu.is_open)
+            self.logger.debug(self.ardu)
+            self.ardu.open()
             if self.ardu.is_open:
-                self.logger.debug(self.ardu.is_open)
+                self.serialConnected = True
+                self.logger.debug('Serial connection established. setting serialConnected')
                 self.serialConnected = True
             else:
                 self.ardu.close()
@@ -85,16 +92,22 @@ class gameObject():
                 reAttempts = reAttempts - 1
             if reAttempts == -1:
                 break
+        return self.ardu
+    def clear_display(self):
+        for i in range(self.height*self.length):
+            output_to_serial(i, 0)
+
 
     def output_to_serial(self, space, player):
-        colorr = {1: {'r': 50, 'g': 150, 'b': 50},
+        colorr = {0:{'r':0, 'g':0, 'b':0},
+                  1: {'r': 50, 'g': 150, 'b': 50},
                   2: {'r': 200, 'g': 100, 'b': 0}}
         text = f"{space}, {colorr[player]['r']}, {colorr[player]['g']}, {colorr[player]['b']}"
 
         self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
 
     def start_game(self):
-        if self.commsArduino:
+        if self.commsArduino == True and self.serialConnected == False:
             self.init_serial()
         self.inProgress = True
 
@@ -328,6 +341,7 @@ class gameObject():
         self.board[choice]['moveNumber'] = self.currentTurn
         self.logger.info("Move taken")
         if self.serialConnected:
+            time.sleep(1)
             self.output_to_serial(choice, player)
         return self.end_turn(self.currentPlayer, choice)
 
@@ -483,8 +497,7 @@ class gameObject():
             self.logger.info('Cumulative Scores updated yay!')
             print(
                 f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
-        if self.serialConnected:
-            self.ardu.close()
+        self.clear_display()
         self.inProgress = False
 
         # self.printLineBreak()
@@ -569,7 +582,7 @@ if __name__ == '__main__':
                         game.logger.error("vreak")
         return open_spaces
 
-    game = gameObject(length=16, height=16)
+    game = gameObject(length=8, height=5)
     num_times = game.iterations
     tally = []
     # if game.serialConnected:
