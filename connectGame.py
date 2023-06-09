@@ -6,9 +6,6 @@ import serial.tools.list_ports as list_ports
 # board needs to be made into a subclass or separate class
 
 
-<< << << < HEAD
-
-
 class gameModel():
     def __init__(self, game=' '):
         self.game = game
@@ -449,17 +446,17 @@ class gameObject():
             if reason == 1:
                 self.winner = data
 
-
-<< << << < HEAD
     if self.modPlayerPts(cumulative=True):
 
         self.logger.info('Cumulative Scores updated yay!')
         print(
             f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
     self.clear_display()
-== == == =
+
     print(
         f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+
+
 >>>>>> > b02
     self.inProgress = False
     self.printLineBreak()
@@ -502,10 +499,9 @@ if __name__ == '__main__':
                         print("vreak")
         return open_spaces
 
-<< << << < HEAD
     game = gameObject(length=8, height=5)
     num_times = game.iterations
-== == == =
+
     def confirm_runtime():
         num_times = False
         confirm = False
