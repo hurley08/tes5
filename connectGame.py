@@ -456,8 +456,6 @@ class gameObject():
     print(
         f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
 
-
->>>>>> > b02
     self.inProgress = False
     self.printLineBreak()
     return self.inProgress
@@ -535,7 +533,7 @@ if __name__ == '__main__':
         return aggre
 
     num_times = confirm_runtime()
->>>>>> > b02
+
     tally = []
     # if game.serialConnected:
     #   game.init_serial()
