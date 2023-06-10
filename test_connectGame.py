@@ -3,22 +3,27 @@ from connectGame import *
 
 
 def test_func_fast():
+    game = gameObject()
     pass
 
 
 @pytest.mark.smoke
 def test_game_defaults():
-    ame = connectGame.gameObject(height=5, length=8)
-    assert game.inProgress() == False
+    game = gameObject(height=5, length=8)
+
+    assert game.inProgress == False
+    assert game.winner == False
+    assert game.playerCumulative == {1: 0, 2: 0}
+    assert game.colors == {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
 
 
 @pytest.mark.smoke
 def test_game_height_set():
-    ame = connectGame.gameObject(height=5, length=8)
+    game = gameObject(height=5, length=8)
     assert game.height == 5
 
 
 @pytest.mark.smoke
 def test_game_length_set():
-    ame = connectGame.gameObject(height=5, length=8)
+    game = gameObject(height=5, length=8)
     assert game.length == 8

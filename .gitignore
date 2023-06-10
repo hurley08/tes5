@@ -1,0 +1,5 @@
+*.cov*
+*.pyc
+*.log
+**/logdebug.log 
+*.pyc 

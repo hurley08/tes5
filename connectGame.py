@@ -15,7 +15,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=True):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -328,7 +328,7 @@ class gameObject():
         self.board[choice]['occupied'] = True
         self.board[choice]['moveNumber'] = self.currentTurn
         self.printLineBreak(text="Move Taken", prefix=True)
-        if self.serialConnected:
+        if self.commsArduino:
             time.sleep(1)
             self.output_to_serial(choice, player)
         return self.end_turn(self.currentPlayer, choice)
@@ -446,19 +446,19 @@ class gameObject():
             if reason == 1:
                 self.winner = data
 
-    if self.modPlayerPts(cumulative=True):
+        if self.modPlayerPts(cumulative=True):
 
-        self.logger.info('Cumulative Scores updated yay!')
+            self.logger.info('Cumulative Scores updated yay!')
+            print(
+                f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+        self.clear_display()
+
         print(
-            f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
-    self.clear_display()
+            f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
 
-    print(
-        f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
-
-    self.inProgress = False
-    self.printLineBreak()
-    return self.inProgress
+        self.inProgress = False
+        self.printLineBreak()
+        return self.inProgress
 
     # if self.serialConnected:
     #       self.ardu.close()
@@ -498,7 +498,6 @@ if __name__ == '__main__':
         return open_spaces
 
     game = gameObject(length=8, height=5)
-    num_times = game.iterations
 
     def confirm_runtime():
         num_times = False
