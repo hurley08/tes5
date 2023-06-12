@@ -144,7 +144,7 @@ class gameObject():
             self.playerCumulative[2] += self.playerScore[2]
             self.logger.info(f'\nSeries tally was updated to reflect')
             self.logger.debug(
-                '\n{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
+                '{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
 
     def create_board(self, height=5, length=8):
         height = self.height
@@ -463,9 +463,8 @@ class gameObject():
                 self.winner = data
         if self.modPlayerPts(cumulative=True):
 
-            self.logger.info('Cumulative Scores updated yay!')
-            print(
-                f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+            self.logger.info(
+                "reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         if self.serialConnected:
             self.ardu.close()
         self.inProgress = False
@@ -476,11 +475,12 @@ class gameObject():
     #+ i for i in range(8)]def #pcvpc(self):
 
     def process_tally(self, tally):
-        aggre = {1: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0},
-                 2: {'winningMoves': [], 'count': 0, 'score': 0, 'numScore': 0}}
+        #
+        aggre = {1: {'winningMoves': [], 'winCount': 0, 'score': 0, 'numScore': 0},
+                 2: {'winningMoves': [], 'winCount': 0, 'score': 0, 'numScore': 0}}
         for i in tally:
             aggre[i[0]]['winningMoves'].append([i[1], i[2]])
-            aggre[i[0]]['count'] += 1
+            aggre[i[0]]['winCount'] += 1
             aggre[i[0]]['score'] += i[3][i[0]]
             aggre[i[0]]['numScore'] += 1
         self.logger.info('\nwinner\t winning seq.\twinning move\tplayer:score')
@@ -488,8 +488,8 @@ class gameObject():
             self.logger.debug('')
             for j in i:
                 self.logger.debug(str(j) + '\t')
-        p1 = aggre[1]['count']
-        p2 = aggre[2]['count']
+        p1 = aggre[1]['winCount']
+        p2 = aggre[2]['winCount']
         p1numScoreArray = []
         p2numScoreArray = []
         for i in tally:
@@ -503,7 +503,7 @@ class gameObject():
         # print(
         #    f'\nPlayer 1 mean:{sum(p1numScoreArray)/len(p1numScoreArray):.2f}pts max:{max(p1numScoreArray):} min:{min(p1numScoreArray):} and Player 2 averaged {sum(p1numScoreArray)/len(p2numScoreArray):.2f}pts  max:{max(p2numScoreArray):} min:{min(p2numScoreArray):} ')
         print(f'\n\t\tPlayer 1\t\tPlayer 2 ')
-        print(f"\nwins#:\t\t{aggre[1]['count']}\t\t\t{aggre[2]['count']}")
+        print(f"\nwins#:\t\t{aggre[1]['winCount']}\t\t\t{aggre[2]['winCount']}")
         print(f'\nwin%:\t\t{p1/(p1+p2)*100:.2f}%\t\t\t{p2/(p1+p2)*100:.2f}%')
         print(
             f'\nmean(pts):\t{sum(p1numScoreArray)/len(p1numScoreArray):.2f}\t\t\t{sum(p2numScoreArray)/len(p2numScoreArray):.2f}')
@@ -527,7 +527,7 @@ class gameObject():
                 # print(str(i) + " is a possible move")
                 open_spaces.append(i)
             if board[i]['color'] in [1, 2]:
-                j = i
+                j = itally
                 # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
                 while board[j]['color'] in [1, 2] and j - self.length > 0:
                     j = j - self.length
@@ -603,4 +603,4 @@ if __name__ == '__main__':
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
 # ser.close()
     cov.stop()
-    cov.save()
+cov.save()

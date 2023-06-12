@@ -33,7 +33,11 @@ Create a connect 4 system that can be played by a user against and automated opp
 - [x]		Game messages should have some formatting for presentation
 - [ ]		User can modify Game parameters at execution via command line arguments
 - [ ] 		process_tally and confirm_runtime methods should be a part of gameObjects class
-- [ ]		Write unit tests
+- [x]		Write unit tests
 - [ ]		Allow selection of log file 
 - [ ]		Allow visualization of boards smaller than 16x16 on 16x16 matrix (currently only 16x16 boards are visualized this way)
-- [ ] 		Enable code coverage analysis 
+- [x] 		Enable code coverage analysis 
+- [ ]		Refactor the huge game class into smaller more modular classes
+- [ ]		Refactor and use data structures that are not unique to a single method 
+- [ ]		Improve code coverage. Highest was ~75% current coverage is ~67% 
+- [ ]		This project should be using dataframes 
