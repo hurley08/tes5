@@ -7,14 +7,6 @@ import time
 # board needs to be made into a subclass or separate class
 
 cov = coverage.Coverage()
-cov.start()
-
-
-class gameModel():
-    def __init__(self, game=' '):
-        self.game = game
-        self.player1 = 0
-        self.player2 = 0
 
 
 class gameObject():
@@ -536,24 +528,10 @@ class gameObject():
         # print('\n', aggre)
         return aggre
 
-
-if __name__ == '__main__':
-    start = time.time()
-
-    def draw_board(boardDict, height=5, length=8):
-        length = game.length
-        height = game.height
-        print('0\t| ', end='')
-        for key in boardDict.keys():
-            piece = game.colors[boardDict[key]['color']]
-            print(piece + ' | ', end='')
-            if int(key) != (height * length) - 1 and (int(key) + 1) % length == 0:
-                print(f'\n{str(key+1)}\t| ', end='')
-
-    def possible_moves(board):
+    def possible_moves(self, board):
         open_spaces = []
-        rows = [(game.length * game.height) -
-                game.length + i for i in range(game.length)]
+        rows = [(self.length * self.height) -
+                self.length + i for i in range(self.length)]
         for i in rows:
             if board[i]['color'] == -1:
                 # print(str(i) + " is a possible move")
@@ -561,14 +539,19 @@ if __name__ == '__main__':
             if board[i]['color'] in [1, 2]:
                 j = i
                 # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
-                while board[j]['color'] in [1, 2] and j - game.length > 0:
-                    j = j - game.length
+                while board[j]['color'] in [1, 2] and j - self.length > 0:
+                    j = j - self.length
                     try:
                         if board[j]['color'] == -1:
                             open_spaces.append(j)
                     except:
-                        game.logger.error("vreak")
+                        self.logger.error("vreak")
         return open_spaces
+
+
+if __name__ == '__main__':
+    cov.start()
+    start = time.time()
 
     game = gameObject(length=8, height=5)
     num_times = game.iterations
@@ -592,7 +575,7 @@ if __name__ == '__main__':
 
                 # game.check_move(game.board,  game.currentPlayer, random.choice(selectFrom))
                 while game.inProgress:
-                    selectFrom = possible_moves(game.board)
+                    selectFrom = game.possible_moves(game.board)
                     if len(selectFrom) > 0:
                         choice = random.choice(selectFrom)
 
