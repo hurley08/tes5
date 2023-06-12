@@ -187,16 +187,6 @@ class gameObject():
             moveLog[i] = False
         return moveLog
 
-    def draw_board(self, board, height=5, length=8):
-        height = self.height
-        length = self.length
-        print('0\t| ', end='')
-        for key in self.board.keys():
-            piece = self.colors[self.board[key]['color']]
-            print(piece + ' | ', end='')
-            if int(key) != height * length and (int(key) + 1) % length == 0:
-                print(f'\n{str(key+1)}\t| ', end='')
-
     def start_turn(self, player, choice=None):
 
         self.logger.info("Starting  Turn")
@@ -247,7 +237,7 @@ class gameObject():
                 f'GAME OVER, Winner: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
             if self.drawBoardGameOver:
-                draw_board(jsd)
+                self.draw_board(jsd)
             self.game_over(1, player)
             return True
 
@@ -547,6 +537,16 @@ class gameObject():
                     except:
                         self.logger.error("vreak")
         return open_spaces
+
+    def draw_board(self, boardDict):
+        length = self.length
+        height = self.height
+        print('0\t| ', end='')
+        for key in boardDict.keys():
+            piece = self.colors[boardDict[key]['color']]
+            print(piece + ' | ', end='')
+            if int(key) != (height * length) - 1 and (int(key) + 1) % length == 0:
+                print(f'\n{str(key+1)}\t| ', end='')
 
 
 if __name__ == '__main__':
