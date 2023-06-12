@@ -604,4 +604,3 @@ if __name__ == '__main__':
 # ser.close()
 cov.stop()
 cov.save()
-cov.html_report()

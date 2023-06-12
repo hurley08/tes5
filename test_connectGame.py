@@ -1,5 +1,5 @@
 import pytest
-from connectGame import *
+from connectGame import gameObject
 
 
 def test_func_fast():
