@@ -19,7 +19,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=True, comPort="COM3"):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False, comPort="COM3"):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -29,14 +29,16 @@ class gameObject():
         # print('self init')
         self.isBot = isBot
         self.debug = False
-        self.serialConnected = False
-        self.commsArduino = commsArduino
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
         self.drawBoardTurn = drawBoardTurn
         self.drawBoardGameOver = drawBoardGameOver
         self.comPort = comPort
+        self.commsArduino = commsArduino
+        self.serialConnected = False
+        if commsArduino == True:
+            self.init_serial()
 
         if not disable_interaction:
             self.iterations = self.confirm_runtime()
@@ -93,7 +95,7 @@ class gameObject():
         self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
 
     def start_game(self):
-        #if self.commsArduino:
+        # if self.commsArduino:
         #    self.init_serial()
         self.inProgress = True
 
@@ -568,7 +570,7 @@ if __name__ == '__main__':
                         game.logger.error("vreak")
         return open_spaces
 
-    game = gameObject(length=16, height=16)
+    game = gameObject(length=8, height=5)
     num_times = game.iterations
     tally = []
     if game.commsArduino:
@@ -616,7 +618,7 @@ if __name__ == '__main__':
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
-ser.close()
+# ser.close()
 cov.stop()
 cov.save()
 cov.html_report()
