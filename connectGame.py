@@ -602,5 +602,5 @@ if __name__ == '__main__':
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
 # ser.close()
-cov.stop()
-cov.save()
+    cov.stop()
+    cov.save()
