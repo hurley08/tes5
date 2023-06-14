@@ -527,7 +527,7 @@ class gameObject():
                 # print(str(i) + " is a possible move")
                 open_spaces.append(i)
             if board[i]['color'] in [1, 2]:
-                j = itally
+                j = i
                 # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
                 while board[j]['color'] in [1, 2] and j - self.length > 0:
                     j = j - self.length
