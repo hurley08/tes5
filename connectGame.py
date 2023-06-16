@@ -6,6 +6,105 @@ import serial.tools.list_ports as list_ports
 # board needs to be made into a subclass or separate class
 
 
+
+
+
+class gameObject():
+
+    def __init__(self, waitTime=0.1, board={}, height=5, length=8, isBot=False):
+        self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
+        self.dummy = 5
+        self.waitTime = waitTime
+        self.height = height
+        self.length = length
+        self.board = board
+        print('self init')
+        self.isBot = isBot
+        self.debug = False
+        self.serialConnected = True
+        self.inProgress = False
+        self.winner = False        
+        self.inProgress = False
+        self.winner = False
+        self.playerCumulative = {1: 0, 2: 0}
+        self.drawBoardTurn = drawBoardTurn
+        self.drawBoardGameOver = drawBoardGameOver
+
+        self.serialConnected = False
+        self.commsArduino = commsArduino 
+        if serialConnected == False and self.commsArduino == True:
+            self.init_serial()
+
+        if not disable_interaction:
+            self.iterations = self.confirm_runtime()
+        if disable_interaction:
+            self.iterations = 10
+        if self.iterations > 20 and drawBoardTurn == None:
+            self.drawBoardTurn = False
+        self.logLevel = logLevel
+        # logger.debug('{self.logLevel set to {logLevel:}}')
+        logger, log = self.init_logger(logLevel)
+        self.logger = logger
+        self.log = log
+
+    def init_logger(self, logLevel):
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logLevel)
+        log = logging.StreamHandler()
+        log.setLevel(logLevel)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log.setFormatter(formatter)
+        logger.addHandler(log)
+        return logger, log
+
+    def init_serial(self):
+        reAttempts = 5
+        self.logger.warning(
+            'There must be an arduino connected and enumerated on the port listed in ardu.port or this will fail')
+        if not self.serialConnected:
+            self.ardu.port = '/dev/tty.usbserial-0001'
+            self.ardu.baudrate = 115200
+            self.ardu = serial.Serial()
+            
+            
+            
+
+        while self.serialConnected == False:
+            self.logger.debug('Open Attempt')
+            self.logger.debug(self.ardu)
+            self.ardu.open()
+            if self.ardu.is_open:
+                self.serialConnected = True
+                self.logger.debug('Serial connection established. setting serialConnected')
+                self.serialConnected = True
+            else:
+                self.ardu.close()
+                self.logger.info(f'{reAttempts=}')
+                self.logger.debug(self.ardu)
+                print(f'{reAttempts=}, {self.ardu}')
+                reAttempts = reAttempts - 1
+            if reAttempts == -1:
+                break
+        return self.ardu
+    def clear_display(self):
+        for i in range(self.height*self.length):
+            output_to_serial(i, 0)
+
+'''
+class comms():
+    def __init__(self, port='COM3', baud=115200):
+        self.ports = list(serial.tools.list_ports.comports())
+        self.logger.debug(ports)
+        self.ardu = serial.Serial('COM14', 115200)
+        self.ardu.open()
+        if self.ardu.is_open:
+            self.serialConnected = True
+            return self.ardu
+        else:
+            self.logger.debug('_init_serial')
+            
+            <<<<<<< b02
 class comms():
     def __init__(self, port='COM3', baud=115200):
         self.ports = list(serial.tools.list_ports.comports())
@@ -24,8 +123,20 @@ class comms():
         text = f"{space}, {colorr[player]['r']}, {colorr[player]['g']}, {colorr[player]['b']}"
 
         self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
+'''
 
+    def output_to_serial(self, space, player):
+        colorr = {0:{'r':0, 'g':0, 'b':0},
+                  1: {'r': 50, 'g': 150, 'b': 50},
+                  2: {'r': 200, 'g': 100, 'b': 0}}
+        text = f"{space}, {colorr[player]['r']}, {colorr[player]['g']}, {colorr[player]['b']}"
 
+        self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
+    def start_game(self):
+        self.inProgress = True
+        if self.commsArduino == True and self.serialConnected == False:
+            self.init_serial()
+     
 class gameObject():
 
     def __init__(self, waitTime=0.1, board={}, height=5, length=8, isBot=False):
@@ -236,6 +347,7 @@ class gameObject():
         self.board[choice]['moveNumber'] = self.currentTurn
         self.printLineBreak(text="Move Taken", prefix=True)
         if self.serialConnected:
+            time.sleep(1)
             self.output_to_serial(choice, player)
         return self.end_turn(self.currentPlayer, choice)
 
@@ -353,6 +465,14 @@ class gameObject():
                 self.winner = data
         print(
             f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+
+        if self.modPlayerPts(cumulative=True):
+            self.logger.info('Cumulative Scores updated yay!')
+            print(
+                f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+        self.clear_display()
+        print(
+            f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         self.inProgress = False
         self.printLineBreak()
         return self.inProgress
@@ -393,6 +513,9 @@ if __name__ == '__main__':
                     except:
                         print("vreak")
         return open_spaces
+
+    game = gameObject(length=8, height=5)
+    num_times = game.iterations
 
     def confirm_runtime():
         num_times = False
@@ -468,4 +591,13 @@ if __name__ == '__main__':
         tally.append([game.isWinner[1], game.isWinner[2], game.isWinner[3]])
 
         # game.whose_turn()
+
+    process_tally(tally)
+
+    results = game.process_tally(tally)
+    print("--- %s seconds ---" % (time.time() - start))
+    game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
+cov.stop()
+cov.save()
+cov.html_report()
     process_tally(tally)
