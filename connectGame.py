@@ -6,28 +6,24 @@ import serial.tools.list_ports as list_ports
 # board needs to be made into a subclass or separate class
 
 
-<<<<<<< HEAD
 
-class gameModel():
-    def __init__(self, game=' '):
-        self.game = game
-        self.player1 = 0
-        self.player2 = 0
 
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=True):
+    def __init__(self, waitTime=0.1, board={}, height=5, length=8, isBot=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
         self.height = height
         self.length = length
         self.board = board
-        # print('self init')
+        print('self init')
         self.isBot = isBot
         self.debug = False
-        
+        self.serialConnected = True
+        self.inProgress = False
+        self.winner = False        
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
@@ -95,7 +91,7 @@ class gameObject():
         for i in range(self.height*self.length):
             output_to_serial(i, 0)
 
-=======
+'''
 class comms():
     def __init__(self, port='COM3', baud=115200):
         self.ports = list(serial.tools.list_ports.comports())
@@ -107,7 +103,27 @@ class comms():
             return self.ardu
         else:
             self.logger.debug('_init_serial')
->>>>>>> 225a263 (still trying to fix seria)
+            
+            <<<<<<< b02
+class comms():
+    def __init__(self, port='COM3', baud=115200):
+        self.ports = list(serial.tools.list_ports.comports())
+        self.logger.debug(ports)
+        self.ardu = serial.Serial('COM14', 115200)
+        self.ardu.open()
+        if self.ardu.is_open:
+            self.serialConnected = True
+            return self.ardu
+        else:
+            self.logger.debug('_init_serial')
+
+    def output_to_serial(self, space, player):
+        colorr = {1: {'r': 50, 'g': 150, 'b': 50},
+                  2: {'r': 200, 'g': 100, 'b': 0}}
+        text = f"{space}, {colorr[player]['r']}, {colorr[player]['g']}, {colorr[player]['b']}"
+
+        self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
+'''
 
     def output_to_serial(self, space, player):
         colorr = {0:{'r':0, 'g':0, 'b':0},
@@ -116,15 +132,11 @@ class comms():
         text = f"{space}, {colorr[player]['r']}, {colorr[player]['g']}, {colorr[player]['b']}"
 
         self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
-
-<<<<<<< HEAD
     def start_game(self):
+        self.inProgress = True
         if self.commsArduino == True and self.serialConnected == False:
             self.init_serial()
-        self.inProgress = True
-=======
->>>>>>> 225a263 (still trying to fix seria)
-
+     
 class gameObject():
 
     def __init__(self, waitTime=0.1, board={}, height=5, length=8, isBot=False):
@@ -451,17 +463,16 @@ class gameObject():
         if reason in reasons.keys():
             if reason == 1:
                 self.winner = data
-<<<<<<< HEAD
-        if self.modPlayerPts(cumulative=True):
+        print(
+            f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
 
+        if self.modPlayerPts(cumulative=True):
             self.logger.info('Cumulative Scores updated yay!')
             print(
                 f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         self.clear_display()
-=======
         print(
             f"reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
->>>>>>> 225a263 (still trying to fix seria)
         self.inProgress = False
         self.printLineBreak()
         return self.inProgress
@@ -503,10 +514,9 @@ if __name__ == '__main__':
                         print("vreak")
         return open_spaces
 
-<<<<<<< HEAD
     game = gameObject(length=8, height=5)
     num_times = game.iterations
-=======
+
     def confirm_runtime():
         num_times = False
         confirm = False
@@ -540,7 +550,6 @@ if __name__ == '__main__':
         return aggre
 
     num_times = confirm_runtime()
->>>>>>> 225a263 (still trying to fix seria)
     tally = []
     # if game.serialConnected:
     #   game.init_serial()
@@ -582,13 +591,13 @@ if __name__ == '__main__':
         tally.append([game.isWinner[1], game.isWinner[2], game.isWinner[3]])
 
         # game.whose_turn()
-<<<<<<< HEAD
+
+    process_tally(tally)
+
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
 cov.stop()
 cov.save()
 cov.html_report()
-=======
     process_tally(tally)
->>>>>>> 225a263 (still trying to fix seria)
