@@ -7,11 +7,19 @@ import time
 # board needs to be made into a subclass or separate class
 
 cov = coverage.Coverage()
+cov.start()
+
+
+class gameModel():
+    def __init__(self, game=' '):
+        self.game = game
+        self.player1 = 0
+        self.player2 = 0
 
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False, comPort="COM3"):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=10, board=None, height=5, length=8, isBot=False, drawBoardTurn=False, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -21,16 +29,17 @@ class gameObject():
         # print('self init')
         self.isBot = isBot
         self.debug = False
+        
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
         self.drawBoardTurn = drawBoardTurn
         self.drawBoardGameOver = drawBoardGameOver
-        self.comPort = comPort
-        self.commsArduino = commsArduino
+
         self.serialConnected = False
-        if commsArduino == True:
-            self.init_serial()
+        self.commsArduino = commsArduino 
+        if self.serialConnected == False and self.commsArduino == True:
+            self,init_serial()
 
         if not disable_interaction:
             self.iterations = self.confirm_runtime()
@@ -60,35 +69,45 @@ class gameObject():
         self.logger.warning(
             'There must be an arduino connected and enumerated on the port listed in ardu.port or this will fail')
         if not self.serialConnected:
-
-            self.ardu = serial.Serial("COM3", 115200)
-
-        while reAttempts > -1:
+            self.ardu.port = '/dev/tty.usbserial-0001'
+            self.ardu.baudrate = 115200
+            self.ardu = serial.Serial()
+            self.serialConnected = True
+            
+        while self.serialConnected == False:
+            self.logger.debug('Open Attempt')
+            self.logger.debug(self.ardu)
+            self.ardu.open()
             if self.ardu.is_open:
-                self.logger.debug(self.ardu.is_open)
+                self.serialConnected = True
+                self.logger.debug('Serial connection established. setting serialConnected')
                 self.serialConnected = True
             else:
-                self.ardu.cancel_read
                 self.ardu.close()
-                time.sleep(1)
-                self.ardu.open()
                 self.logger.info(f'{reAttempts=}')
                 self.logger.debug(self.ardu)
                 print(f'{reAttempts=}, {self.ardu}')
                 reAttempts = reAttempts - 1
             if reAttempts == -1:
                 break
+        return self.ardu
+    def clear_display(self):
+        for i in range(self.height*self.length):
+            if self.commsArduino:
+                self.output_to_serial(i, 0)
+
 
     def output_to_serial(self, space, player):
-        colorr = {1: {'r': 50, 'g': 150, 'b': 50},
+        colorr = {0:{'r':0, 'g':0, 'b':0},
+                  1: {'r': 50, 'g': 150, 'b': 50},
                   2: {'r': 200, 'g': 100, 'b': 0}}
         text = f"{space}, {colorr[player]['r']}, {colorr[player]['g']}, {colorr[player]['b']}"
 
         self.ardu.write(f'<setPixelColor, {text}>\0'.encode())
 
     def start_game(self):
-        # if self.commsArduino:
-        #    self.init_serial()
+        if self.commsArduino == True and self.serialConnected == False:
+            self.init_serial()
         self.inProgress = True
 
         self.winner = False
@@ -187,6 +206,16 @@ class gameObject():
             moveLog[i] = False
         return moveLog
 
+    def draw_board(self, board, height=5, length=8):
+        height = self.height
+        length = self.length
+        print('0\t| ', end='')
+        for key in self.board.keys():
+            piece = self.colors[self.board[key]['color']]
+            print(piece + ' | ', end='')
+            if int(key) != height * length and (int(key) + 1) % length == 0:
+                print(f'\n{str(key+1)}\t| ', end='')
+
     def start_turn(self, player, choice=None):
 
         self.logger.info("Starting  Turn")
@@ -237,7 +266,7 @@ class gameObject():
                 f'GAME OVER, Winner: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
             if self.drawBoardGameOver:
-                self.draw_board(jsd)
+                draw_board(jsd)
             self.game_over(1, player)
             return True
 
@@ -311,6 +340,7 @@ class gameObject():
         self.board[choice]['moveNumber'] = self.currentTurn
         self.logger.info("Move taken")
         if self.serialConnected:
+            time.sleep(1)
             self.output_to_serial(choice, player)
         return self.end_turn(self.currentPlayer, choice)
 
@@ -463,10 +493,17 @@ class gameObject():
                 self.winner = data
         if self.modPlayerPts(cumulative=True):
 
+<<<<<<< HEAD
             self.logger.info(
                 "reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         if self.serialConnected:
             self.ardu.close()
+=======
+            self.logger.info('Cumulative Scores updated yay!')
+            print(
+                f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+        self.clear_display()
+>>>>>>> 6888404 (catching up)
         self.inProgress = False
 
         # self.printLineBreak()
@@ -518,10 +555,24 @@ class gameObject():
         # print('\n', aggre)
         return aggre
 
-    def possible_moves(self, board):
+
+if __name__ == '__main__':
+    start = time.time()
+
+    def draw_board(boardDict, height=5, length=8):
+        length = game.length
+        height = game.height
+        print('0\t| ', end='')
+        for key in boardDict.keys():
+            piece = game.colors[boardDict[key]['color']]
+            print(piece + ' | ', end='')
+            if int(key) != (height * length) - 1 and (int(key) + 1) % length == 0:
+                print(f'\n{str(key+1)}\t| ', end='')
+
+    def possible_moves(board):
         open_spaces = []
-        rows = [(self.length * self.height) -
-                self.length + i for i in range(self.length)]
+        rows = [(game.length * game.height) -
+                game.length + i for i in range(game.length)]
         for i in rows:
             if board[i]['color'] == -1:
                 # print(str(i) + " is a possible move")
@@ -529,35 +580,20 @@ class gameObject():
             if board[i]['color'] in [1, 2]:
                 j = i
                 # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
-                while board[j]['color'] in [1, 2] and j - self.length > 0:
-                    j = j - self.length
+                while board[j]['color'] in [1, 2] and j - game.length > 0:
+                    j = j - game.length
                     try:
                         if board[j]['color'] == -1:
                             open_spaces.append(j)
                     except:
-                        self.logger.error("vreak")
+                        game.logger.error("vreak")
         return open_spaces
-
-    def draw_board(self, boardDict):
-        length = self.length
-        height = self.height
-        print('0\t| ', end='')
-        for key in boardDict.keys():
-            piece = self.colors[boardDict[key]['color']]
-            print(piece + ' | ', end='')
-            if int(key) != (height * length) - 1 and (int(key) + 1) % length == 0:
-                print(f'\n{str(key+1)}\t| ', end='')
-
-
-if __name__ == '__main__':
-    cov.start()
-    start = time.time()
 
     game = gameObject(length=8, height=5)
     num_times = game.iterations
     tally = []
-    if game.commsArduino:
-        game.init_serial()
+    # if game.serialConnected:
+    #   game.init_serial()
     for tt in range(num_times):
 
         game.start_game()
@@ -575,7 +611,7 @@ if __name__ == '__main__':
 
                 # game.check_move(game.board,  game.currentPlayer, random.choice(selectFrom))
                 while game.inProgress:
-                    selectFrom = game.possible_moves(game.board)
+                    selectFrom = possible_moves(game.board)
                     if len(selectFrom) > 0:
                         choice = random.choice(selectFrom)
 
@@ -601,6 +637,12 @@ if __name__ == '__main__':
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
+<<<<<<< HEAD
 # ser.close()
     cov.stop()
 cov.save()
+=======
+cov.stop()
+cov.save()
+cov.html_report()
+>>>>>>> 6888404 (catching up)

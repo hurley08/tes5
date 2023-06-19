@@ -3,16 +3,16 @@ from connectGame import gameObject
 
 
 @pytest.fixture
-def game():
+def test_game():
     game = gameObject(height=5, length=8)
     return game
 
 
 @pytest.fixture
-def started_game(game):
-    started_game = game.start_game()
-    game = started_game
-    return game
+def test_started_game():
+	game = gameObject(height=8, length=8)
+	started_game = game.start_game()
+	return started_game
 
 
 def test_func_fast():
@@ -49,11 +49,11 @@ def test_game_length_set(game):
 
 @pytest.mark.smoke
 def test_game_area(started_game):
-    assert len(game.board.keys()) == 40
+    assert len(game.board.keys()) == 64
 
 
 @ pytest.mark.smoke
-def start_game_defaults(started_game):
+def test_start_game_defaults(started_game):
     print(started_game)
     assert game.inProgress == True
     assert game.winner == False
