@@ -1,5 +1,15 @@
+<<<<<<< HEAD
 *.cov*
 *.pyc
 *.log
 **/logdebug.log 
 *.pyc 
+=======
+*.pyc
+*.log
+*.coverage
+*.cov
+*/logs/*
+__pycache__*
+Logs/*
+>>>>>>> master
