@@ -4,3 +4,4 @@
 *.cov
 */logs/*
 __pycache__*
+Logs/*
