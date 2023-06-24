@@ -1,0 +1,6 @@
+*.pyc
+*.log
+*.coverage
+*.cov
+*/logs/*
+__pycache__*
