@@ -492,18 +492,14 @@ class gameObject():
             if reason == 1:
                 self.winner = data
         if self.modPlayerPts(cumulative=True):
-
-<<<<<<< HEAD
             self.logger.info(
                 "reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         if self.serialConnected:
             self.ardu.close()
-=======
             self.logger.info('Cumulative Scores updated yay!')
             print(
                 f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
         self.clear_display()
->>>>>>> 6888404 (catching up)
         self.inProgress = False
 
         # self.printLineBreak()
@@ -637,12 +633,7 @@ if __name__ == '__main__':
     results = game.process_tally(tally)
     print("--- %s seconds ---" % (time.time() - start))
     game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
-<<<<<<< HEAD
 # ser.close()
     cov.stop()
 cov.save()
-=======
-cov.stop()
-cov.save()
-cov.html_report()
->>>>>>> 6888404 (catching up)
+

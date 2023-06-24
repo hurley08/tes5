@@ -3,13 +3,13 @@ from connectGame import gameObject
 
 
 @pytest.fixture
-def test_game():
+def game():
     game = gameObject(height=5, length=8)
     return game
 
 
 @pytest.fixture
-def test_started_game():
+def started_game():
 	game = gameObject(height=8, length=8)
 	started_game = game.start_game()
 	return started_game
@@ -21,7 +21,7 @@ def test_func_fast():
 
 
 @pytest.mark.smoke
-def test_game_defaults(game):
+def test_game_defaults(started_game):
 
     assert game.inProgress == False
     assert game.winner == False
