@@ -20,7 +20,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=20000, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=15, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -46,6 +46,8 @@ class gameObject():
             self.iterations = self.confirm_runtime()
         if disable_interaction:
             self.iterations = iterations
+        if iterations < 10 and drawBoardTurn == None:
+            self.drawBoardTurn = True
         if iterations > 20 and drawBoardTurn == None:
             self.drawBoardTurn = False
         self.logLevel = logLevel
@@ -113,7 +115,7 @@ class gameObject():
         self.inProgress = True
 
         self.winner = False
-        self.board = self.create_board(height=self.height, length=self.length)
+        self.create_board(height=self.height, length=self.length)
         self.logger.info('NEW GAME')
         self.turnLog = self.init_log()
         self.logger.debug("init log")
@@ -121,6 +123,10 @@ class gameObject():
         self.logger.info(
             "starting player chosen: Player {self.currentPlayer}\n\n\n")
         self.logger.info("setting game parameters")
+        self.horizontal = []
+        self.vertical = []
+        self.diag1 = []
+        self.diag2 = []
         self.define_win_dim()
         self.turnKey = False
         self.lastTurn = 0
@@ -168,12 +174,13 @@ class gameObject():
                 '{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
 
     def create_board(self, height=5, length=8):
-        height = self.height
-        length = self.length
+        self.height = height
+        self.length = length
         boardIndex = {}
         for i in range(height * length):
             boardIndex.update(
                 {i: {'color': -1, 'occupied': False, 'moveNumber': -1}})
+        self.board = boardIndex
         return boardIndex
 
     def confirm_runtime(self):
