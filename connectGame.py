@@ -636,14 +636,12 @@ def main():
     game.logger.info("--- completed in %s seconds ---" %
                      (time.time() - start))
 # ser.close()
-    cov.stop()
-
-
-cov.save()
 
 
 if __name__ == '__main__':
     cProfile.run('main()')
+    cov.stop()
+    cov.save()
     '''
     start = time.time()
 
