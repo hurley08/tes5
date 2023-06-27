@@ -10,9 +10,9 @@ def game():
 
 @pytest.fixture
 def started_game():
-	game = gameObject(height=8, length=8)
-	started_game = game.start_game()
-	return started_game
+    game = gameObject(height=8, length=8)
+    started_game = game.start_game()
+    return started_game
 
 
 def test_func_fast():
@@ -23,17 +23,16 @@ def test_func_fast():
 @pytest.mark.smoke
 def test_game_defaults(started_game):
 
-    assert game.inProgress == False
-    assert game.winner == False
-    assert game.playerCumulative == {1: 0, 2: 0}
-    assert game.colors == {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
+    assert started_game.inProgress == True
+    assert started_game.winner == False
+    assert started_game.playerCumulative == {1: 0, 2: 0}
+    assert started_game.colors == {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
 
 
 @pytest.mark.smoke
 def test_more_default_params(game):
     assert game.drawBoardTurn == False
     assert game.drawBoardGameOver == True
-    assert game.comPort == "COM3"
     assert game.commsArduino == False
 
 
@@ -49,16 +48,16 @@ def test_game_length_set(game):
 
 @pytest.mark.smoke
 def test_game_area(started_game):
-    assert len(game.board.keys()) == 64
+    assert len(started_game.board.keys()) == 64
 
 
 @ pytest.mark.smoke
 def test_start_game_defaults(started_game):
     print(started_game)
-    assert game.inProgress == True
-    assert game.winner == False
-    assert game.currentPlayer in [1, 2]
-    assert game.lastTurn == 0
-    assert game.currentTurn == 1
-    assert game.lastMove == None
-    assert game.currentMove == None
+    assert started_game.inProgress == True
+    assert started_game.winner == False
+    assert started_game.currentPlayer in [1, 2]
+    assert started_game.lastTurn == 0
+    assert started_game.currentTurn == 1
+    assert started_game.lastMove == None
+    assert started_game.currentMove == None
