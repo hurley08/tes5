@@ -1,3 +1,30 @@
+'''
+Connect 4 Class that pits twp dumb players that randomly selects from a choice of possible moves
+
+Arguments:
+Full breakdown will be included in the readme eventually.
+notable arguments in __init__ are
+iterations                      number of games to play. Set preemptively or set disable_interaction to False if a prompt at launch is preferred 
+height/length                   dimensions of the board. These default to 5 and height respectively
+drawBoardTurn/game_over         draw board at the end of turn / draw board at end of game 
+commsArduino                    aruino connected to a 16x16 led matrix can visualize the game
+logLevel                        used to specify the severity of an before 
+
+Exceptions:
+NA
+
+Returns:
+NA
+
+Outputs:
+Visualization of board at end of every game (if enabled)
+crude metrics for each player
+Requires:
+load_dict
+time
+'''
+
+
 import serial
 import coverage
 import cProfile
@@ -623,12 +650,11 @@ def main():
                     else:
 
                         print("there are no spaces available")
-                        game.game_over(0, game.currentPlayer)
-                        if game.debug:
+                        game.gamesdsdasdsadebug:
                             print(game.printLineBreak())
         print(game.isWinner)
         tally.append([game.isWinner[1], game.isWinner[2],
-                      game.isWinner[3], game.playerScore])
+                      game.iasdasdasddsWinner[3], game.playerScore])
 
         # game.whose_turn()
     results = game.process_tally(tally)
@@ -641,91 +667,3 @@ def main():
 if __name__ == '__main__':
     cProfile.run('main()')
     cov.stop()
-    cov.save()
-    '''
-    start = time.time()
-
-    def draw_board(boardDict, height=5, length=8):
-        length = game.length
-        height = game.height
-        print('0\t| ', end='')
-        for key in boardDict.keys():
-            piece = game.colors[boardDict[key]['color']]
-            print(piece + ' | ', end='')
-            if int(key) != (height * length) - 1 and (int(key) + 1) % length == 0:
-                print(f'\n{str(key+1)}\t| ', end='')
-
-    def possible_moves(board):
-        open_spaces = []
-        rows = [(game.length * game.height) -
-                game.length + i for i in range(game.length)]
-        for i in rows:
-            if board[i]['color'] == -1:
-                # print(str(i) + " is a possible move")
-                open_spaces.append(i)
-            if board[i]['color'] in [1, 2]:
-                j = i
-                # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
-                while board[j]['color'] in [1, 2] and j - game.length > 0:
-                    j = j - game.length
-                    try:
-                        if board[j]['color'] == -1:
-                            open_spaces.append(j)
-                    except:
-                        game.logger.error("vreak")
-        return open_spaces
-'''
-'''
-    game = gameObject(length=8, height=5)
-    num_times = game.iterations
-    tally = []
-    # if game.serialConnected:
-    #   game.init_serial()
-    for tt in range(num_times):
-
-        game.start_game()
-        if game.debug:
-            print(game.length, game.height)
-        while game.inProgress:
-
-            for i in range(len(game.board.keys())):
-
-                # if game.waitTime > 0:
-                    # time.sleep(game.waitTime)
-
-                if game.debug:
-                    wait = input("press enter to continue")
-
-                # game.check_move(game.board,  game.currentPlayer, random.choice(selectFrom))
-                while game.inProgress:
-                    selectFrom = possible_moves(game.board)
-                    if len(selectFrom) > 0:
-                        choice = random.choice(selectFrom)
-
-                        while game.board[choice]['color'] > 0:
-                            choice = random.choice(selectFrom)
-
-                        game.start_turn(game.currentPlayer,
-                                        random.choice(selectFrom))
-                        # print(f"\nlast move: {game.lastMove} current move: {game.currentMove}")
-                        game.switch_player()
-
-                    else:
-
-                        print("there are no spaces available")
-                        game.game_over(0, game.currentPlayer)
-                        if game.debug:
-                            print(game.printLineBreak())
-        print(game.isWinner)
-        tally.append([game.isWinner[1], game.isWinner[2],
-                      game.isWinner[3], game.playerScore])
-
-        # game.whose_turn()
-    results = game.process_tally(tally)
-    print("--- %s seconds ---" % (time.time() - start))
-    game.logger.info("--- completed in %s seconds ---" % (time.time() - start))
-# ser.close()
-    cov.stop()
-cov.save()
-
-'''

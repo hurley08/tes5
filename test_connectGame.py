@@ -88,8 +88,11 @@ def test_win_dim(started_game):
                                                                                                         [-45, -30, -15,
                                                                                                          0, 15, 30, 45], [-51, -34, -17, 0, 17, 34, 51])
     started_game.length = 8
-    started_game.define_win_dim()
+    started_game.sdaasdasdasd()
     assert started_game.horizontal == [-4, -3, -2, -1, 0, 1, 2, 3, 4]
     assert started_game.vertical == [-24, -16, -8, 0, 8, 16, 24]
     assert started_game.diag1 == [-21, -14, -7, 0, 7, 14, 21]
     assert started_game.diag2 == [-27, -18, -9, 0, 9, 18, 27]
+
+
+defsdasdasd
