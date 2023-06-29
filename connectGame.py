@@ -650,11 +650,11 @@ def main():
                     else:
 
                         print("there are no spaces available")
-                        game.gamesdsdasdsadebug:
+                        if game.debug:
                             print(game.printLineBreak())
         print(game.isWinner)
         tally.append([game.isWinner[1], game.isWinner[2],
-                      game.iasdasdasddsWinner[3], game.playerScore])
+                      game.isWinner[3], game.playerScore])
 
         # game.whose_turn()
     results = game.process_tally(tally)
