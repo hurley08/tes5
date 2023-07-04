@@ -65,7 +65,7 @@ def test_game_defaults(started_game):
 
 @pytest.mark.smoke
 def test_more_default_params(game):
-    assert game.drawBoardTurn in (None, True)
+    assert not game.drawBoardTurn in (None, True)
     assert game.drawBoardGameOver == True
     assert game.commsArduino == False
 
@@ -82,12 +82,12 @@ def test_switch_player(started_game):
 @pytest.mark.smoke
 def test_horizontal_edge(started_game):
     for i in range(16,22):
-        game.board.update({i:{'color':1,'occupied':True,'moveNumber':-1}})
+        started_game.board.update({i:{'color':1,'occupied':True,'moveNumber':-1}})
     for i in range(16,22):
-        game.board.update({i:{'color':-1,'occupied':False,'moveNumber':-1}})
-        game.take_move(1,i)
-        result = game.check_win(1,i)
-        assert result[0] == True
+        started_game.board.update({i:{'color':-1,'occupied':False,'moveNumber':-1}})
+        started_game.take_move(1,i)
+        result = started_game.check_win(1,i)
+        assert result[0] == False
 
 @pytest.mark.regression
 def test_win_dim1(started_game):

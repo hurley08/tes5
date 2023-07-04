@@ -25,8 +25,8 @@ time
 '''
 
 
-import serial
-import coverage
+#import serial
+import coverage,math
 import cProfile
 import random
 import logging
@@ -47,7 +47,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=1, board=None, height=5, length=8, isBot=False, drawBoardTurn=True, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=100, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -57,7 +57,7 @@ class gameObject():
         # print('self init')
         self.isBot = isBot
         self.debug = False
-
+        self.win_length = 4
         self.inProgress = False
         self.winner = False
         self.playerCumulative = {1: 0, 2: 0}
@@ -205,6 +205,13 @@ class gameObject():
                 {i: {'color': -1, 'occupied': False, 'moveNumber': -1}})
         self.board = boardIndex
         return boardIndex
+    def find_row(self, length=8, target=0):
+        length= int(length)
+        target = int(target)
+        lbound= math.floor( target / length)
+        rbound = math.ceil(target/length)
+        window = [i for i in range(length*lbound,length*rbound)]
+        return window
 
     def confirm_runtime(self):
         num_times = False
@@ -398,11 +405,12 @@ class gameObject():
 
     def define_win_dim(self):
         l = self.length
+        n = self.win_length
        # h = self.height
-        diag1 = [i *(l-1) for i in range(-3,4)]
-        diag2 = [i * (l+1) for i in range(-3,4)]
-        vertical = [i*l for i in range(-3,4)]
-        horizontal = [i for i in range(-3,4)]
+        diag1 = [i *(l-1) for i in range(-n+1,n)]
+        diag2 = [i * (l+1) for i in range(-n+1,n)]
+        vertical = [i*l for i in range(-n+1,n)]
+        horizontal = [i for i in range(-n+1,n)]
         self.diag1 = diag1
         self.diag2 = diag2
         self.vertical = vertical
@@ -439,9 +447,9 @@ class gameObject():
 
         # checks if move results in a connect 4
 
-    def check_win(self, player, last_move, board=None):
+    def check_win(self, player, target, board=None):
        # print(\f'{player==self.currentPlayer=}')
-        self.logger.info('Checking for Win with {last_move:}')
+        self.logger.info('Checking for Win with {target:}')
         l = self.length
         h = self.height
         if not board:
@@ -450,9 +458,9 @@ class gameObject():
         sequence = []
         self.logger.info("Checking Diagonals")
         for i in self.diag1:
-            if 0 <= i + last_move < (h * l) - 1:
-                if board[last_move + i]['color'] == player:
-                    sequence.append(i + last_move)
+            if 0 <= i + target < (h * l) - 1:
+                if board[target + i]['color'] == player:
+                    sequence.append(i + target)
                 else:
                     sequence = []
                 if len(sequence) == 2:
@@ -465,12 +473,12 @@ class gameObject():
                    # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     if self.locate_col(sequence):
-                        return True, player, sequence, last_move
+                        return True, player, sequence, target
         sequence = []
         for i in self.diag2:
-            if 0 <= i + last_move < (h * l):
-                if board[last_move + i]['color'] == player:
-                    sequence.append(i + last_move)
+            if 0 <= i + target < (h * l):
+                if board[target + i]['color'] == player:
+                    sequence.append(i + target)
                 if len(sequence) == 2:
                     self.logger.debug('connect2!')
                    # self.modPlayerPts(player=player, delta=3)
@@ -483,15 +491,15 @@ class gameObject():
                     sequence.reverse()
                     fa = self.locate_col(sequence)
                     if fa:
-                        return True, player, sequence, last_move
+                        return True, player, sequence, target
         sequence = []
 
         self.logger.info("Checking Laterals")
         sequence = []
         for i in self.vertical:
-            if 0 <= i + last_move < (h * l):
-                if board[last_move + i]['color'] == player:
-                    sequence.append(i + last_move)
+            if 0 <= i + target < (h * l):
+                if board[target + i]['color'] == player:
+                    sequence.append(i + target)
                 if len(sequence) == 2:
                     self.logger.debug('connect2!')
                     # self.modPlayerPts(player=player, delta=3)
@@ -501,41 +509,28 @@ class gameObject():
                     # self.modPlayerPts(player=player, delta=5)
                     # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
-                    return True, player, sequence, last_move
+                    return True, player, sequence, target
 
         sequence = []
 
         self.logger.info("checking horizontal")
+        row = self.find_row(self.length,target)
+        self.logger.info(f'{row=}, {target=}, {row=}')
+        combo = []
+        max_combo = 0
+        for i in self.wind(row,self.win_length):
+            for j in i:
+                combo.append(1) if board[j]['color'] == player else combo.append(0)
+            if sum(combo) == 4:
+                return True, player, i, target
+            if sum(combo) < 4:
+                max_combo = sum(combo) if sum(combo) > max_combo else max_combo
+            combo=[]
+        return False,player, max_combo, target
 
-        for i in self.horizontal:
-
-            self.logger.debug(f"{i=}")
-            if (last_move + i < (h * l)) and (last_move + i > -1):
-
-                self.logger.debug(
-                    "{last_move=},{last_move+i=},{board[last_move+i]=}")
-                if board[last_move + i]['color'] == player:
-                    sequence.append(i + last_move)
-                    if len(sequence) == 2:
-                        self.logger.debug('connect2!')
-                        # self.modPlayerPts(player=player, delta=3)
-                        # self.modPlayerPts(player=player * -1, delta=-1)
-                    if len(sequence) == 3:
-                        self.logger.debug('connect3!')
-                        # self.modPlayerPts(player=player, delta=5)
-                        # self.modPlayerPts(player=player * -1, delta=-3)
-                    if len(sequence) == 4:
-                        fa = self.check_spillover(
-                            sequence, direction='horizontal')
-                        if fa:
-                            return True, player, sequence, last_move
-                        else:
-                            sequence = []
-                else:
-                    sequence = []
-            # if (i*(i%self.length))<=i+last_move<(i+1)*(i%self.length):
-
-        return False, player, sequence, last_move
+    def wind(self, arr, k):
+        for i in range(len(arr)-k+1):
+            yield arr[i:i+k]
 
     def game_over(self, reason, data):
         reasons = {0: {'no space for moves': "last_player\'s"},  # code:{reason for end:data field should include this inforamation
@@ -664,7 +659,7 @@ def main():
 
 
 if __name__ == '__main__':
-    #cProfile.run('main()')
-    main()
+    cProfile.run('main()')
+     
     cov.stop()
     cov.save()
