@@ -79,17 +79,28 @@ def test_switch_player(started_game):
     assert lastPlayer != started_game.currentPlayer
     assert lastPlayer in [1, 2]
 
+@pytest.mark.smoke
+def test_horizontal_edge(started_game):
+    for i in range(16,22):
+        game.board.update({i:{'color':1,'occupied':True,'moveNumber':-1}})
+    for i in range(16,22):
+        game.board.update({i:{'color':-1,'occupied':False,'moveNumber':-1}})
+        game.take_move(1,i)
+        result = game.check_win(1,i)
+        assert result[0] == True
 
 @pytest.mark.regression
-def test_win_dim(started_game):
-    assert (started_game.horizontal, started_game.vertical, started_game.diag1, started_game.diag2) == ([-4, -3, -2, -1, 0, 1, 2, 3, 4],
-                                                                                                        [-48, -32, -16,
-                                                                                                         0, 16, 32, 48],
-                                                                                                        [-45, -30, -15,
-                                                                                                         0, 15, 30, 45], [-51, -34, -17, 0, 17, 34, 51])
+def test_win_dim1(started_game):
+    assert (started_game.horizontal, started_game.vertical, started_game.diag1, started_game.diag2) == ([-3, -2, -1, 0, 1, 2, 3],
+                                                                                                        [-48, -32, -16, 0, 16, 32, 48],
+                                                                                                        [-45, -30, -15, 0, 15, 30, 45],
+                                                                                                        [-51, -34, -17, 0, 17, 34, 51])
+
+@pytest.mark.regression
+def test_win_dim2(started_game):                                                                                                      
     started_game.length = 8
     started_game.start_game()
-    assert started_game.horizontal == [-4, -3, -2, -1, 0, 1, 2, 3, 4]
+    assert started_game.horizontal == [-3, -2, -1, 0, 1, 2, 3]
     assert started_game.vertical == [-24, -16, -8, 0, 8, 16, 24]
     assert started_game.diag1 == [-21, -14, -7, 0, 7, 14, 21]
     assert started_game.diag2 == [-27, -18, -9, 0, 9, 18, 27]

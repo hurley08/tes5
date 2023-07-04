@@ -47,7 +47,7 @@ class gameModel():
 
 class gameObject():
 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=15, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=1, board=None, height=5, length=8, isBot=False, drawBoardTurn=True, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -150,10 +150,6 @@ class gameObject():
         self.logger.info(
             "starting player chosen: Player {self.currentPlayer}\n\n\n")
         self.logger.info("setting game parameters")
-        self.horizontal = []
-        self.vertical = []
-        self.diag1 = []
-        self.diag2 = []
         self.define_win_dim()
         self.turnKey = False
         self.lastTurn = 0
@@ -301,7 +297,7 @@ class gameObject():
             self.logger.info(
                 f'GAME OVER, Winner: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
             jsd = self.draw_win(isWinner[2])
-            if self.drawBoardTurn:
+            if self.drawBoardGameOver:
                 self.draw_board(jsd)
             self.game_over(1, player)
             return True
@@ -403,12 +399,14 @@ class gameObject():
     def define_win_dim(self):
         l = self.length
        # h = self.height
-        self.diag1 = [-(l - 1) * 3, -(l - 1) * 2, -(l - 1),
-                      0, l - 1, (l - 1) * 2, (l - 1) * 3]
-        self.diag2 = [-(l + 1) * 3, -(l + 1) * 2, -(l + 1),
-                      0, l + 1, (l + 1) * 2, (l + 1) * 3]
-        self.vertical = [-3 * l, -2 * l, -l, 0, l, 2 * l, 3 * l]
-        self.horizontal = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
+        diag1 = [i *(l-1) for i in range(-3,4)]
+        diag2 = [i * (l+1) for i in range(-3,4)]
+        vertical = [i*l for i in range(-3,4)]
+        horizontal = [i for i in range(-3,4)]
+        self.diag1 = diag1
+        self.diag2 = diag2
+        self.vertical = vertical
+        self.horizontal =horizontal
 
     def check_spillover(self, array, direction='vertical'):
         k = int(self.length / array[0])
@@ -649,7 +647,8 @@ def main():
 
                     else:
 
-                        print("there are no spaces available")
+                        print("there are no spaces available", tt)
+                        game.inProgress = False
                         if game.debug:
                             print(game.printLineBreak())
         print(game.isWinner)
@@ -665,6 +664,7 @@ def main():
 
 
 if __name__ == '__main__':
-    cProfile.run('main()')
+    #cProfile.run('main()')
+    main()
     cov.stop()
     cov.save()
