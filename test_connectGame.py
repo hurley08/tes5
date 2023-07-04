@@ -89,6 +89,19 @@ def test_horizontal_edge(started_game):
         result = started_game.check_win(1,i)
         assert result[0] == False
 
+@pytest.mark.smoke
+def test_vertical_windows(started_game):
+    slices = [[15,23,31,39],[8,16,24,32],[12,10,18,26]]
+    for lists in slices:
+        for i in lists: 
+            started_game.board.update({i:{'color':1,'occupied':True,'moveNumber':-1}})
+        for i in lists:
+            started_game.board.update({i:{'color':-1,'occupied':False,'moveNumber':-1}})
+            started_game.take_move(1,i)
+            result = started_game.check_win(1,i)
+            assert result[0] == False
+
+
 @pytest.mark.regression
 def test_win_dim1(started_game):
     assert (started_game.horizontal, started_game.vertical, started_game.diag1, started_game.diag2) == ([-3, -2, -1, 0, 1, 2, 3],
