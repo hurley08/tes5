@@ -641,7 +641,6 @@ def main():
                         game.switch_player()
 
                     else:
-
                         print("there are no spaces available", tt)
                         game.inProgress = False
                         if game.debug:

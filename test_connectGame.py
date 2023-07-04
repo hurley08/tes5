@@ -100,6 +100,7 @@ def test_win_dim1(started_game):
 def test_win_dim2(started_game):                                                                                                      
     started_game.length = 8
     started_game.start_game()
+
     assert started_game.horizontal == [-3, -2, -1, 0, 1, 2, 3]
     assert started_game.vertical == [-24, -16, -8, 0, 8, 16, 24]
     assert started_game.diag1 == [-21, -14, -7, 0, 7, 14, 21]
