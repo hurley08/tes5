@@ -46,7 +46,8 @@ class gameModel():
 
 
 class gameObject():
-
+    rewards = {2:2, 3:5,-2:-1,-3:-2,4: 10,-4:-12} # 2 and 3 pieces captured in a window earns player points and penalizes opponent 
+ 
     def __init__(self, waitTime=0.1, disable_interaction=True, iterations=100, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
@@ -312,11 +313,14 @@ class gameObject():
         try:
             if self.drawBoardTurn:
                 self.draw_board(self.board)
-            self.modPlayerPts(player=player, delta=1)
+            if isWinner[2] > 1: 
+                self.modPlayerPts(player=player,delta=self.rewards[isWinner[2]])
+                self.modPlayerPts(player=-player,delta=self.rewards[-isWinner[2]])
+            
             self.logger.info("This turn is over")
             return True
         except:
-            logger.Error("something failed in endTurn")
+            self.logger.Error("something failed in endTurn")
             return False
 
     def possible_moves(self, board):
@@ -398,6 +402,7 @@ class gameObject():
         self.board[choice]['occupied'] = True
         self.board[choice]['moveNumber'] = self.currentTurn
         self.logger.info("Move taken")
+        self.modPlayerPts(player=player, delta=1)
         if self.serialConnected:
             time.sleep(1)
             self.output_to_serial(choice, player)
@@ -456,6 +461,8 @@ class gameObject():
             board = self.board
             board = self.board
         sequence = []
+        max_combo = 0
+        
         self.logger.info("Checking Diagonals")
         for i in self.diag1:
             if 0 <= i + target < (h * l) - 1:
@@ -463,37 +470,24 @@ class gameObject():
                     sequence.append(i + target)
                 else:
                     sequence = []
-                if len(sequence) == 2:
-                    self.logger.debug('connect2!')
-                   # self.modPlayerPts(player=player, delta=3)
-                   # self.modPlayerPts(player=player * -1, delta=-1)
-                if len(sequence) == 3:
-                    self.logger.debug('connect3!')
-                   # self.modPlayerPts(player=player, delta=5)
-                   # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     if self.locate_col(sequence):
                         return True, player, sequence, target
+            max_combo = len(sequence) if len(sequence) > max_combo else max_combo
         sequence = []
+        max_combo = 0
         for i in self.diag2:
             if 0 <= i + target < (h * l):
                 if board[target + i]['color'] == player:
                     sequence.append(i + target)
-                if len(sequence) == 2:
-                    self.logger.debug('connect2!')
-                   # self.modPlayerPts(player=player, delta=3)
-                   # self.modPlayerPts(player=player * -1, delta=-1)
-                if len(sequence) == 3:
-                    self.logger.debug('connect3!')
-                    # self.modPlayerPts(player=player, delta=5)
-                    # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     sequence.reverse()
                     fa = self.locate_col(sequence)
                     if fa:
                         return True, player, sequence, target
+            max_combo = len(sequence) if len(sequence) > max_combo else max_combo
         sequence = []
-
+        max_combo = 0
         self.logger.info("Checking Laterals")
         sequence = []
         for i in self.vertical:
@@ -510,7 +504,8 @@ class gameObject():
                     # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     return True, player, sequence, target
-
+            max_combo = len(sequence) if len(sequence) > max_combo else max_combo
+        max_combo = 0
         sequence = []
 
         self.logger.info("checking horizontal")
