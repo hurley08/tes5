@@ -4,11 +4,11 @@ Connect 4 Class that pits twp dumb players that randomly selects from a choice o
 Arguments:
 Full breakdown will be included in the readme eventually.
 notable arguments in __init__ are
-iterations                      number of games to play. Set preemptively or set disable_interaction to False if a prompt at launch is preferred 
+iterations                      number of games to play. Set preemptively or set disable_interaction to False if a prompt at launch is preferred
 height/length                   dimensions of the board. These default to 5 and height respectively
-drawBoardTurn/game_over         draw board at the end of turn / draw board at end of game 
+drawBoardTurn/game_over         draw board at the end of turn / draw board at end of game
 commsArduino                    aruino connected to a 16x16 led matrix can visualize the game
-logLevel                        used to specify the severity of an before 
+logLevel                        used to specify the severity of an before
 
 Exceptions:
 NA
@@ -25,8 +25,10 @@ time
 '''
 
 
-#import serial
-import coverage,math
+# import serial
+import pdb
+import coverage
+import math
 import cProfile
 import random
 import logging
@@ -46,9 +48,10 @@ class gameModel():
 
 
 class gameObject():
-    rewards = {2:2, 3:5,-2:-1,-3:-2,4: 10,-4:-12} # 2 and 3 pieces captured in a window earns player points and penalizes opponent 
- 
-    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=100, board=None, height=5, length=8, isBot=False, drawBoardTurn=None, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
+    # 2 and 3 pieces captured in a window earns player points and penalizes opponent
+    rewards = {2: 2, 3: 5, -2: -1, -3: -2, 4: 10, -4: -12}
+
+    def __init__(self, waitTime=0.1, disable_interaction=True, iterations=100, board=None, height=5, length=8, isBot=True, drawBoardTurn=True, drawBoardGameOver=True, logLevel='CRITICAL', commsArduino=False):
         self.colors = {-1: '⚫', 1: '🔴', 2: '🔵', '🔴': '🟡', '🔵': '🟢'}
         self.dummy = 5
         self.waitTime = waitTime
@@ -68,7 +71,7 @@ class gameObject():
         self.serialConnected = False
         self.commsArduino = commsArduino
         if self.serialConnected == False and self.commsArduino == True:
-            self, init_serial()
+            self.init_serial()
 
         if not disable_interaction:
             self.iterations = self.confirm_runtime()
@@ -83,17 +86,6 @@ class gameObject():
         logger, log = self.init_logger(logLevel)
         self.logger = logger
         self.log = log
-
-    def init_logger(self, logLevel):
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logLevel)
-        log = logging.StreamHandler()
-        log.setLevel(logLevel)
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        log.setFormatter(formatter)
-        logger.addHandler(log)
-        return logger, log
 
     def init_serial(self):
         reAttempts = 5
@@ -123,6 +115,17 @@ class gameObject():
             if reAttempts == -1:
                 break
         return self.ardu
+
+    def init_logger(self, logLevel):
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logLevel)
+        log = logging.StreamHandler()
+        log.setLevel(logLevel)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        log.setFormatter(formatter)
+        logger.addHandler(log)
+        return logger, log
 
     def clear_display(self):
         for i in range(self.height * self.length):
@@ -154,8 +157,8 @@ class gameObject():
         self.define_win_dim()
         self.turnKey = False
         self.lastTurn = 0
-        self.currentTurn = 1
-        self.nextTurn = 2
+        self.currentTurn = 0
+        self.nextTurn = 1
         self.lastMove = None
         self.currentMove = None
         self.logger.info("All's tweaked. Commencing game")
@@ -164,6 +167,7 @@ class gameObject():
 
     def switch_player(self):
         self.currentPlayer = 1 if self.currentPlayer == 2 else 2
+        return self.currentPlayer
 
     def printLineBreak(self, text='', dbl_space=False, prefix=False):
         filler = '='
@@ -186,9 +190,11 @@ class gameObject():
             try:
                 self.playerScore[player] = self.playerScore[player] + delta
                 self.logger.info(f"{player=} score was updated by {delta=}")
+                print(f"{player=} score was updated by {delta=}")
                 return True
             except:
                 self.logger.warning(f"{player=} score NOT updated by {delta=}")
+                print(f"{player=} score NOT updated by {delta=}")
                 return False
         if cumulative:
             self.playerCumulative[1] += self.playerScore[1]
@@ -196,6 +202,7 @@ class gameObject():
             self.logger.info(f'\nSeries tally was updated to reflect')
             self.logger.debug(
                 '{self.playerScore[1]=} was added to {self.playerCumulative[1]=}\n{self.playerScore[2]=} was added to {self.playerCumulative[2]=}')
+            return True
 
     def create_board(self, height=5, length=8):
         self.height = height
@@ -206,12 +213,13 @@ class gameObject():
                 {i: {'color': -1, 'occupied': False, 'moveNumber': -1}})
         self.board = boardIndex
         return boardIndex
+
     def find_row(self, length=8, target=0):
-        length= int(length)
+        length = int(length)
         target = int(target)
-        lbound= math.floor( target / length)
-        rbound = math.ceil(target/length)
-        window = [i for i in range(length*lbound,length*rbound)]
+        lbound = math.floor(target / length)
+        rbound = math.ceil(target / length)
+        window = [i for i in range(length * lbound, length * rbound)]
         return window
 
     def confirm_runtime(self):
@@ -246,45 +254,70 @@ class gameObject():
             moveLog[i] = False
         return moveLog
 
-    def draw_board(self, board, height=5, length=8):
+    def draw_board(self, board=None, height=5, length=8):
         height = self.height
         length = self.length
+        board = self.board if board == None else board
+        cipher = list(self.board.keys())
         print('0\t| ', end='')
-        for key in self.board.keys():
+        for key in cipher:
             piece = self.colors[self.board[key]['color']]
             print(piece + ' | ', end='')
-            if int(key) != height * length and (int(key) + 1) % length == 0:
+            if int(key) != height * length and (int(key) + 1) % length == 0 and int(key) + 1 < len(cipher):
                 print(f'\n{str(key+1)}\t| ', end='')
 
-    def start_turn(self, player, choice=None):
-
+    def begin_turn(self, player, isBot):
+        print('begin_turn')
+        if self.currentTurn > 1:
+            while self.lastMove[1] == self.currentPlayer:
+                self.switch_player()
+        # to increment turn variables, check player turn, and call choose_move
+        if isBot != self.isBot:
+            print("is this supposed to be a bot?")
         self.logger.info("Starting  Turn")
         self.turnKey = True
         msg = f"{self.lastTurn=}, {self.currentTurn=}, {self.nextTurn=}, {self.lastMove=}, {self.currentPlayer=}"
 
-        # self.printLineBreak(text=msg, dbl_space=False)
-
-        msg = f"current player: {self.currentPlayer} desired move: {choice}"
+        self.printLineBreak(text=msg, dbl_space=False)
+        print(self.currentPlayer)
+        msg = f"current player: {self.currentPlayer}"
         self.logger.info(msg)
 
         # self.printLineBreak(text=msg, prefix=True)
         # print(f"lastTurn: {self.lastTurn} currentTurn: {self.currentTurn} nextTurn: {self.nextTurn}")
+        if player != self.currentPlayer:
+            print("Was a turn skipped?")
         self.lastTurn = self.currentTurn
         self.currentTurn = self.nextTurn
-        # self.nextTurn = self.nextTurn + 1
+        self.nextTurn = self.nextTurn + 1
+        return self.choose_move(player=player, isBot=self.isBot)
 
+    def choose_move(self, player=0, isBot=True):
+        print('choose_move')
+        # use to identify which space player wants to occupy next
+        choice = None
+        choiceAccepted = False
         openSpaces = self.possible_moves(self.board)
-        choiceAccepted = self.check_move(self.currentPlayer, choice)
-        while choiceAccepted == False:
-            if len(openSpaces) < 1:
+        print(openSpaces)
+
+        if isBot == False:
+            while choiceAccepted == False and openSpaces != []:
+                choice = int(
+                    input(f'Choose a space on the board. (0-{self.length*self.height-1}).'))
+                choiceAccepted = self.check_move(
+                    self.currentPlayer, choice)
+        if isBot == True:
+            if openSpaces == False:
+                self.game_over(0, self.currentPlayer)
                 return False
+                # this is where machine must decide what space to play
+            elif len(openSpaces) > 1:
+                choice = random.choice(openSpaces)
+            elif len(openSpaces) == 1:
+                choice = openSpaces[0]
 
-            choiceAccepted = self.check_move(self.currentPlayer, int(
-                input('Integers 1-39 represent the spaces on the board. Choose one')))
-        if choiceAccepted:
-            self.currentMove = choice
+            choiceAccepted = self.check_move(self.currentPlayer, choice)
 
-            self.logger.info("Submitting Move")
         return self.take_move(self.currentPlayer, choice)
 
     def draw_win(self, sequence, board=None):
@@ -296,32 +329,31 @@ class gameObject():
         return board
 
     def end_turn(self, player, choice):
-
+        print('end_turn')
+        if self.drawBoardTurn:
+            self.draw_board(self.board)
         self.isWinner = self.check_win(player, choice, self.board)
-        isWinner = self.isWinner
-        if isWinner[0]:
-            self.modPlayerPts(player=player, delta=10)
-            self.modPlayerPts(player=player * -1, delta=-12)
-            self.logger.info(
-                f'GAME OVER, Winner: {isWinner[1]}, sequence: {isWinner[2]}, lastMove: {isWinner[3]}')
-            jsd = self.draw_win(isWinner[2])
-            if self.drawBoardGameOver:
-                self.draw_board(jsd)
-            self.game_over(1, player)
-            return True
+        print(self.isWinner)
+        if isWinner[0] == True:
+            pdb.set_trace()
+            print('DOES THIS EVEN')
+            return self.game_over(reason=1, player=player)
+        self.logger.info("This turn is over")
 
-        try:
-            if self.drawBoardTurn:
-                self.draw_board(self.board)
-            if isWinner[2] > 1: 
-                self.modPlayerPts(player=player,delta=self.rewards[isWinner[2]])
-                self.modPlayerPts(player=-player,delta=self.rewards[-isWinner[2]])
-            
-            self.logger.info("This turn is over")
-            return True
-        except:
-            self.logger.Error("something failed in endTurn")
-            return False
+        self.switch_player()
+        return True
+
+        self.printLineBreak(self.isWinner)
+        self.printLineBreak(self.isWinner)
+
+        # self.printLineBreak(self.isWinner[0])
+
+       # if self.isWinner[2] > 0:
+        #    self.modPlayerPts(
+        #        player=player, delta=self.rewards[isWinner[2]])
+        #    self.modPlayerPts(
+        #        player=-player, delta=self.rewards[-isWinner[2]])
+        #print("I've Returned")
 
     def possible_moves(self, board):
         open_spaces = []
@@ -340,86 +372,61 @@ class gameObject():
                         if board[j]['color'] == -1:
                             open_spaces.append(j)
                     except:
-                        self.logger.error("vreak")
+                        pdb.set_trace()
+                        self.logger.error("Freak")
+        self.currentAvailableSpaces = open_spaces
+        print(open_spaces)
+        if len(open_spaces) < 1:
+            return self.game_over(0, self.currentPlayer)
         return open_spaces
 
-    def old_possible_moves(self, board, height=5, length=8):
-        open_spaces = []
-        taken = []
-        rows = [(height * length) - length + i for i in range(length)]
-        for i in rows:
-            if board[i]['color'] == -1:
-                # print(str(i) + " is a possible move")
-                open_spaces.append(i)
-            if board[i]['color'] in [1, 2]:
-                taken.append(i)
-        for k in taken:
-            while k - length <= 0:
-                if board[k]['color'] in (1, 2) and board[k - 8]['color'] == -1:
-                    open_spaces.append(k - length)
-                    break
-
-            # while k - 8 >= 0 and board[k]['color'] in (1,2):
-            #   print(k,board[k]['color'],k-8,board[k-8]['color'])
-            #   if board[k-8]['color'] == -1:
-            #       open_spaces.append(k)
-            #   k=k-8
-
-                # print(str(j) + " is occupied by "+ str(colors[board[i]['color']]))
-        if len(open_spaces) > 1:
-            return open_spaces
-        return []
-        while (board[j]['color'] in [1, 2]) and (j > -1):
-            j = j - 8
-            try:
-                open_spaces.append(j)
-            except:
-                logger.error("Something in possible_moves() failed")
-        if len(open_spaces) == 0:
-            return self.game_over(reason=-1, data=self.whose_turn())
-        return(open_spaces)
-# if turnKey == True nextTurn is the turn in progress lastMove is the most recent piece placed at a space and
-
     def check_move(self, player, desiredMove):
-
-        #       if not self.lastMove:
-        #           print("this is the first turn")
-        if self.lastMove != None:
-            if self.board[desiredMove]['occupied'] == True:
-                log.error("the desired space is occuppied")
-                return False
-            if self.board[self.lastMove]['color'] == player:
-                log.error('this player took the last turn ')
-                return False
-            if desiredMove not in possible_moves(self.board):
-                log.error("the desired move is not currently accessible")
-                return False
+        print('check_move')
+        if desiredMove not in self.currentAvailableSpaces:
+            print('illegal move')
+            return False
+        if self.board[desiredMove]['occupied'] == True:
+            print('occupied')
+            return False
+        if self.currentPlayer != player:
+            print('wrong player')
+            return False
         return True
 
     def take_move(self, player, choice):
+        print('take_move')
+        # updates the board and calls end_turn
 
-        self.board[choice]['color'] = self.currentPlayer
-        self.board[choice]['occupied'] = True
-        self.board[choice]['moveNumber'] = self.currentTurn
-        self.logger.info("Move taken")
-        self.modPlayerPts(player=player, delta=1)
-        if self.serialConnected:
-            time.sleep(1)
-            self.output_to_serial(choice, player)
-        return self.end_turn(self.currentPlayer, choice)
+        try:
+            self.board[choice] = {
+                'color': player, "occupied": True, 'moveNumber': self.currentTurn}
+            self.logger.info("Move taken")
+            self.modPlayerPts(player=player, delta=1)
+            if self.serialConnected:
+                time.sleep(1)
+                self.output_to_serial(choice, player)
+            self.lastMove = self.currentMove
+            self.currentMove = [choice, self.currentPlayer]
+            self.logger.info("Move Suceeded")
+
+            return self.end_turn(self.currentPlayer, choice)
+        except:
+            self.logger.error("Something failed in take move")
+            return False
+        return True
 
     def define_win_dim(self):
         l = self.length
         n = self.win_length
        # h = self.height
-        diag1 = [i *(l-1) for i in range(-n+1,n)]
-        diag2 = [i * (l+1) for i in range(-n+1,n)]
-        vertical = [i*l for i in range(-n+1,n)]
-        horizontal = [i for i in range(-n+1,n)]
+        diag1 = [i * (l - 1) for i in range(-n + 1, n)]
+        diag2 = [i * (l + 1) for i in range(-n + 1, n)]
+        vertical = [i * l for i in range(-n + 1, n)]
+        horizontal = [i for i in range(-n + 1, n)]
         self.diag1 = diag1
         self.diag2 = diag2
         self.vertical = vertical
-        self.horizontal =horizontal
+        self.horizontal = horizontal
 
     def check_spillover(self, array, direction='vertical'):
         k = int(self.length / array[0])
@@ -453,16 +460,16 @@ class gameObject():
         # checks if move results in a connect 4
 
     def check_win(self, player, target, board=None):
+        print('check_win')
        # print(\f'{player==self.currentPlayer=}')
         self.logger.info('Checking for Win with {target:}')
         l = self.length
         h = self.height
         if not board:
             board = self.board
-            board = self.board
         sequence = []
         max_combo = 0
-        
+
         self.logger.info("Checking Diagonals")
         for i in self.diag1:
             if 0 <= i + target < (h * l) - 1:
@@ -473,9 +480,10 @@ class gameObject():
                 if len(sequence) == 4:
                     if self.locate_col(sequence):
                         return True, player, sequence, target
-            max_combo = len(sequence) if len(sequence) > max_combo else max_combo
+            max_combo = len(sequence) if len(
+                sequence) > max_combo else max_combo
         sequence = []
-        max_combo = 0
+
         for i in self.diag2:
             if 0 <= i + target < (h * l):
                 if board[target + i]['color'] == player:
@@ -485,9 +493,10 @@ class gameObject():
                     fa = self.locate_col(sequence)
                     if fa:
                         return True, player, sequence, target
-            max_combo = len(sequence) if len(sequence) > max_combo else max_combo
+            max_combo = len(sequence) if len(
+                sequence) > max_combo else max_combo
         sequence = []
-        max_combo = 0
+
         self.logger.info("Checking Laterals")
         sequence = []
         for i in self.vertical:
@@ -504,50 +513,64 @@ class gameObject():
                     # self.modPlayerPts(player=player * -1, delta=-3)
                 if len(sequence) == 4:
                     return True, player, sequence, target
-            max_combo = len(sequence) if len(sequence) > max_combo else max_combo
-        max_combo = 0
+            max_combo = len(sequence) if len(
+                sequence) > max_combo else max_combo
+
         sequence = []
 
         self.logger.info("checking horizontal")
-        row = self.find_row(self.length,target)
+        row = self.find_row(self.length, target)
         self.logger.info(f'{row=}, {target=}, {row=}')
         combo = []
-        max_combo = 0
-        for i in self.wind(row,self.win_length):
+
+        for i in self.wind(row, self.win_length):
             for j in i:
-                combo.append(1) if board[j]['color'] == player else combo.append(0)
+                combo.append(
+                    1) if board[j]['color'] == player else combo.append(0)
             if sum(combo) == 4:
                 return True, player, i, target
             if sum(combo) < 4:
                 max_combo = sum(combo) if sum(combo) > max_combo else max_combo
-            combo=[]
-        return False,player, max_combo, target
+            combo = []
+        return False, player, max_combo, target
 
     def wind(self, arr, k):
-        for i in range(len(arr)-k+1):
-            yield arr[i:i+k]
+        for i in range(len(arr) - k + 1):
+            yield arr[i:i + k]
 
     def game_over(self, reason, data):
+        print('game_over')
         reasons = {0: {'no space for moves': "last_player\'s"},  # code:{reason for end:data field should include this inforamation
                    1: {'Connect 4!': "player number"},
                    2: {'Empty': True},
                    -1: {'youNeedToModifyThis': "orDeleteThis"}}
+
         if reason in reasons.keys():
             if reason == 1:
                 self.winner = data
+                self.logger.info(
+                    f'GAME OVER, Winner: {self.isWinner[1]}, sequence: {self.isWinner[2]}, lastMove: {self.isWinner[3]}')
+                jsd = self.draw_win(self.isWinner[2])
+                if self.drawBoardGameOver:
+                    self.draw_board(jsd)
+                self.modPlayerPts(player=self.winner, delta=10)
+                self.modPlayerPts(player=self.winner * -1, delta=-12)
+            if reason == 0:
+                self.logger.info(
+                    f'GAME OVER, NO MOVES LEFT')
         if self.modPlayerPts(cumulative=True):
-            self.logger.info(
-                "reason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+            self.logger.info('Cumulative Scores updated yay!')
         if self.serialConnected:
             self.ardu.close()
-            self.logger.info('Cumulative Scores updated yay!')
-            print(
-                f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
-        self.clear_display()
+            self.clear_display()
+
+        print(
+            f"\nreason:{reasons[reason].keys():},winner:{self.winner:} 🔵>🟢||🔴>🟡")
+
         self.inProgress = False
+        return self.inProgress
 
         # self.printLineBreak()
-        return self.inProgress
 
     #+ i for i in range(8)]def #pcvpc(self):
 
@@ -596,8 +619,11 @@ class gameObject():
         # print('\n', aggre)
         return aggre
 
+    def inProgressState(self):
+        return self.inProgress
 
-def main():
+
+def main2():
 
     start = time.time()
 
@@ -636,8 +662,8 @@ def main():
                         game.switch_player()
 
                     else:
-                        print("there are no spaces available", tt)
-                        game.inProgress = False
+
+                        print("there are no spaces available")
                         if game.debug:
                             print(game.printLineBreak())
         print(game.isWinner)
@@ -652,8 +678,51 @@ def main():
 # ser.close()
 
 
+def main():
+
+    start = time.time()
+
+    game = gameObject(length=8, height=5)
+    num_times = game.iterations
+    tally = []
+    # if game.serialConnected:
+    #   game.init_serial()
+    inProgress = True
+    kill = 0
+    for tt in range(num_times):
+
+        game.start_game()
+
+        while game.inProgress == True and kill != 1:
+            for i in range(len(game.board.keys())):
+
+                # if game.waitTime > 0:
+                    # time.sleep(game.waitTime)
+
+                if game.debug:
+                    wait = input("press enter to continue")
+
+                game.begin_turn(game.currentPlayer, True)
+                if game.inProgressState() == False:
+                    game.inProgress = False
+                    break
+
+            if game.inProgressState() == False:
+                inProgress = False
+                kill = 1
+                break
+        # game.whose_turn()
+    print(tally)
+    results = game.process_tally(tally)
+    print("--- %s seconds ---" % (time.time() - start))
+    game.logger.info("--- completed in %s seconds ---" %
+                     (time.time() - start))
+# ser.close()
+
+
 if __name__ == '__main__':
+
     cProfile.run('main()')
-     
+
     cov.stop()
     cov.save()
